@@ -12,6 +12,7 @@ import objects
 
 class RedirectStream(_io.TextIOWrapper):
     def __init__(self, box):
+        super().__init__()
         self.box = box
 
     def write(self, text):
