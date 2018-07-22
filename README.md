@@ -9,6 +9,7 @@ with UI development, enums and further push my understanding of classes.
 ## TODO
 * [ ] Add the distance slider to emulate long ranged battles
 * [ ] Fix remaining broken math (something to do with health percentages)
+* [ ] Overall quality improvement of the code
 
 ## Possibilities
 * [ ] Unit and Terrain creators
