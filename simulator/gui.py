@@ -12,7 +12,6 @@ import objects
 
 class RedirectStream(_io.TextIOWrapper):
     def __init__(self, box):
-        super().__init__()
         self.box = box
 
     def write(self, text):
@@ -32,6 +31,9 @@ class GUI(QWidget):
 
         self.terrain1 = terrains.Bridge()
         self.terrain2 = terrains.Bridge()
+
+        self.distance = 1
+        self.debug = False
 
         self.initUI()
 
@@ -76,23 +78,36 @@ class GUI(QWidget):
         self.fight_btn.move(50, 50) 
         self.fight_btn.clicked.connect(self.initiate)
 
+        self.inv_btn = QPushButton("Inverse Units", self.bottom)
+        self.inv_btn.resize(self.inv_btn.sizeHint())
+        self.inv_btn.move(250, 50) 
+        self.inv_btn.clicked.connect(self.inverse_units)
+
+        self.inv2_btn = QPushButton("Inverse Terrains", self.bottom)
+        self.inv2_btn.resize(self.inv2_btn.sizeHint())
+        self.inv2_btn.move(450, 50) 
+        self.inv2_btn.clicked.connect(self.inverse_terrain)
+
         QLabel("Distance", self.bottom).move(50, 150)
-        self.slider = QSlider(Qt.Horizontal, parent=self.bottom)
-        self.slider.resize(self.slider.sizeHint())
-        lcd = QLCDNumber(self.bottom)
-        self.slider.move(150, 150)
-        lcd.move(250, 150)
-        self.slider.setFocusPolicy(Qt.StrongFocus)
-        self.slider.setTickPosition(QSlider.TicksBothSides)
-        self.slider.setTickInterval(10)
-        self.slider.setSingleStep(1)
-        
-        self.slider.valueChanged.connect(lcd.display)
+        self.dist_box = QComboBox(self.bottom)
+        self.dist_box.addItems([str(x) for x in range(1, 7)])
+        self.dist_box.activated[str].connect(lambda text: self.__setattr__("distance", int(text)))
+        self.dist_box.move(150, 150)
 
         self.b = QPlainTextEdit(self.bottom)
+        self.b.setReadOnly(True)
         self.b.move(800, 50)
         self.b.resize(700, 500)
         sys.stdout = RedirectStream(self.b)
+
+        self.inv2_btn = QPushButton("Clear", self.bottom)
+        self.inv2_btn.resize(self.inv2_btn.sizeHint())
+        self.inv2_btn.move(1350, 560) 
+        self.inv2_btn.clicked.connect(lambda : self.b.clear())
+
+        self.debug_b = QCheckBox("Debug?", self.bottom)
+        self.debug_b.move(650, 60)
+        self.debug_b.stateChanged.connect(lambda state: self.__setattr__("debug", state == Qt.Checked))
 
 
         self.setGeometry(300, 300, 900, 900)
@@ -103,14 +118,14 @@ class GUI(QWidget):
 
     def unit1_construct(self):
 
-        UnitComboBoxLeft = QComboBox(self.left)
-        unit1 = QLabel("Unit", self.left)
-        UnitComboBoxLeft.addItems(self.unit_list)
+        self.UnitComboBoxLeft = QComboBox(self.left)
+        unit1 = QLabel("Attacker", self.left)
+        self.UnitComboBoxLeft.addItems(self.unit_list)
 
-        UnitComboBoxLeft.activated[str].connect(self.unit1_selected)
+        self.UnitComboBoxLeft.activated[str].connect(self.unit1_selected)
 
         unit1.move(300, 35)
-        UnitComboBoxLeft.move(385, 35)
+        self.UnitComboBoxLeft.move(385, 35)
 
         QLabel("Health", self.left).move(25, 100)
         self.health_left = QLineEdit(self.left)
@@ -172,14 +187,14 @@ class GUI(QWidget):
         self.type_left.setCurrentIndex(self.types.index(self.unit1.type.name))
 
     def terrain1_construct(self):
-        TerrainComboBoxLeft = QComboBox(self.left)
+        self.TerrainComboBoxLeft = QComboBox(self.left)
         terrain1 = QLabel("Terrain", self.left)
-        TerrainComboBoxLeft.addItems(self.terrains_list)
+        self.TerrainComboBoxLeft.addItems(self.terrains_list)
         
-        TerrainComboBoxLeft.activated[str].connect(self.terrain1_selected)
+        self.TerrainComboBoxLeft.activated[str].connect(self.terrain1_selected)
 
         terrain1.move(300, 435)
-        TerrainComboBoxLeft.move(400, 435)
+        self.TerrainComboBoxLeft.move(400, 435)
 
         QLabel("Defense+", self.left).move(25, 500)
         self.tdefense_left = QLineEdit(self.left)
@@ -237,14 +252,14 @@ class GUI(QWidget):
         self.terrain1_set()
 
     def unit2_construct(self):
-        UnitComboBoxRight = QComboBox(self.right)
+        self.UnitComboBoxRight = QComboBox(self.right)
         unit2 = QLabel("Defender ", self.right)
-        UnitComboBoxRight.addItems(self.unit_list)
+        self.UnitComboBoxRight.addItems(self.unit_list)
 
-        UnitComboBoxRight.activated[str].connect(self.unit2_selected)
+        self.UnitComboBoxRight.activated[str].connect(self.unit2_selected)
 
         unit2.move(300, 35)
-        UnitComboBoxRight.move(400, 35)
+        self.UnitComboBoxRight.move(400, 35)
 
         QLabel("Health", self.right).move(25, 100)
         self.health_right = QLineEdit(self.right)
@@ -306,14 +321,14 @@ class GUI(QWidget):
         self.type_right.setCurrentIndex(self.types.index(self.unit2.type.name))
 
     def terrain2_construct(self):
-        TerrainComboBoxright = QComboBox(self.right)
+        self.TerrainComboBoxRight = QComboBox(self.right)
         terrain2 = QLabel("Terrain", self.right)
-        TerrainComboBoxright.addItems(self.terrains_list)
+        self.TerrainComboBoxRight.addItems(self.terrains_list)
         
-        TerrainComboBoxright.activated[str].connect(self.terrain2_selected)
+        self.TerrainComboBoxRight.activated[str].connect(self.terrain2_selected)
 
         terrain2.move(300, 435)
-        TerrainComboBoxright.move(400, 435)
+        self.TerrainComboBoxRight.move(400, 435)
 
         QLabel("Defense+", self.right).move(25, 500)
         self.tdefense_right = QLineEdit(self.right)
@@ -386,40 +401,71 @@ class GUI(QWidget):
         ctx.defender.battles += 1
 
         if "first strike" in ctx.defender.abilities or ("skirmish" in ctx.defender.abilities and ctx.distance == 1) or ("anti-cavalry" in ctx.defender.abilities and ctx.attacker.type == objects.UnitType.cavalry):
-            ctx.status = 1
-            ctx.defender.fight(ctx, ctx.attacker)
+            if ctx.distance <= ctx.defender.range:
+                ctx.status = 1
+                ctx.defender.fight(ctx, ctx.attacker)
+
             ctx.status = 0
             ctx.attacker.fight(ctx, ctx.defender)
         else:
             ctx.attacker.fight(ctx, ctx.defender)
-            ctx.status = 1
-            ctx.defender.fight(ctx, ctx.attacker)
+            if ctx.distance <= ctx.defender.range:
+                ctx.status = 1
+                ctx.defender.fight(ctx, ctx.attacker)
 
             if "rapid fire" in ctx.attacker.abilities:
                 ctx.attacker.fight(ctx, ctx.defender)
 
     def initiate(self):
-        print("initating....")
+        if self.unit1.health == 0 or self.unit2.health == 0:
+            print("!One of the units is dead!\n")
+            return
+
         ctx = objects.Context(
-                attacker=self.unit1,
-                defender=self.unit2,
-                atk_terrain=self.terrain1,
-                def_terrain=self.terrain2,
-                distance=1
+                attacker = self.unit1,
+                defender = self.unit2,
+                atk_terrain = self.terrain1,
+                def_terrain = self.terrain2,
+                distance = self.distance,
+                debug = self.debug
             )
-        print("battle...")
+        print("[battle]")
         self.battle(ctx)
 
-        print("stats..")
+        print("[Final Stats]")
         self.unit1 = ctx.attacker
         self.unit2 = ctx.defender
         print(self.unit1)
         print("...")
         print(self.unit2)
 
-        print("setting...")
+        print("")
         self.unit1_set()
         self.unit2_set()
+
+    def inverse_units(self):
+        temp = self.unit1
+        temp2 = self.unit2
+        self.UnitComboBoxRight.setCurrentIndex(self.unit_list.index(temp.__class__.__name__))
+        self.UnitComboBoxLeft.setCurrentIndex(self.unit_list.index(temp2.__class__.__name__))
+
+        self.unit1 = temp2
+        self.unit2 = temp
+
+        self.unit1_set()
+        self.unit2_set()
+
+    def inverse_terrain(self):
+        temp = self.terrain1
+        temp2 = self.terrain2
+        self.TerrainComboBoxRight.setCurrentIndex(self.terrains_list.index(temp.name))
+        self.TerrainComboBoxLeft.setCurrentIndex(self.terrains_list.index(temp2.name))
+        
+        self.terrain1 = temp2
+        self.terrain2 = temp
+
+        self.terrain1_set()
+        self.terrain2_set()
 
 
 if __name__ == '__main__':

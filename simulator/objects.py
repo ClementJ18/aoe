@@ -50,11 +50,13 @@ class Unit:
         else:
             terrain_bonus = 0
 
-        attack = self.attack * (1 + bonus_dict[self.type][other.type] + self.ribbons() + self.offensive_abilities(ctx, other) + self.weapon_upgrade())
-        attack = attack * self.percent()
+        atk_modif = 1 + bonus_dict[self.type][other.type] + self.ribbons() + self.offensive_abilities(ctx, other) + self.weapon_upgrade()
+        attack_nopercent = round(self.attack * atk_modif)
+        attack = attack_nopercent * self.percent()
 
-        defense = other.defense * (1 + bonus_dict[other.type][self.type] + other.ribbons() + other.defensive_abilities(ctx, self) + other.armor_upgrade() + terrain_bonus)
-        defense = defense * other.percent()
+        def_modif = 1 + bonus_dict[other.type][self.type] + other.ribbons() + other.defensive_abilities(ctx, self) + other.armor_upgrade() + terrain_bonus
+        defense_nopercent = round(other.defense * def_modif)
+        defense = defense_nopercent * other.percent()
 
         if "cause fear" in self.abilities:
             defense -= other.defense * 0.25
@@ -62,11 +64,18 @@ class Unit:
         if "cause fear" in other.abilities:
             attack -= self.attack * 0.25
 
-        print(f"attack of {self.name}: {attack}")
-        print(f"defense of {other.name}: {defense}")
-        print(f"health lost {(attack / (defense * 2)) * 100}")
-
         lost_h = round((attack / (defense * 2)) * 100)
+
+        print(f"real attack of {self.name}: {attack} - modifier: {atk_modif} - net atk: {attack_nopercent}")
+        if ctx.debug:
+            print(f"{bonus_dict[self.type][other.type]} + {self.ribbons()} + {self.offensive_abilities(ctx, other)} + {self.weapon_upgrade()}")
+
+        print(f"real defense of {other.name}: {defense} - modifier: {def_modif} - net def {defense_nopercent}")
+        if ctx.debug:
+            print(f"{bonus_dict[other.type][self.type]} + {other.ribbons()} + {other.defensive_abilities(ctx, self)} + {other.armor_upgrade()} + {terrain_bonus}")
+
+        print(f"health lost {lost_h}")
+        print("")
 
         if lost_h > other.health:
             lost_h = other.health
@@ -81,6 +90,7 @@ class Unit:
 
 class Terrain:
     def __init__(self, **kwargs):
+        self.name = kwargs["name"] if "name" in kwargs else self.__class__.__name__
         self.mov_cost = kwargs["movement_cost"]
         self.vis_cost = kwargs["vision_cost"]
         self.def_bonus = kwargs["defense_bonus"] if "defense_bonus" in kwargs else 0
@@ -126,6 +136,7 @@ class Context:
         self.def_terrain = kwargs["def_terrain"]
         self.status = 0 #0 attack 1 counter attack
         self.distance = kwargs["distance"]
+        self.debug = kwargs["debug"]
 
 bonus_dict = {
     UnitType.infantry:  {UnitType.infantry: 0,    UnitType.ranged: 0,    UnitType.cavalry: 0, UnitType.siege: 0.33, UnitType.structure: 0.33}, 
