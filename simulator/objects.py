@@ -51,11 +51,11 @@ class Unit:
             terrain_bonus = 0
 
         atk_modif = 1 + bonus_dict[self.type][other.type] + self.ribbons() + self.offensive_abilities(ctx, other) + self.weapon_upgrade()
-        attack_nopercent = round(self.attack * atk_modif)
+        attack_nopercent = self.attack * atk_modif
         attack = attack_nopercent * self.percent()
 
         def_modif = 1 + bonus_dict[other.type][self.type] + other.ribbons() + other.defensive_abilities(ctx, self) + other.armor_upgrade() + terrain_bonus
-        defense_nopercent = round(other.defense * def_modif)
+        defense_nopercent = other.defense * def_modif
         defense = defense_nopercent * other.percent()
 
         if "cause fear" in self.abilities:
@@ -66,13 +66,13 @@ class Unit:
 
         lost_h = round((attack / (defense * 2)) * 100)
 
-        print(f"real attack of {self.name}: {attack} - modifier: {atk_modif} - net atk: {attack_nopercent}")
+        print(f"real attack of {self.name}: {attack} - modifier: {atk_modif} - net atk: {round(attack_nopercent)}")
         if ctx.debug:
-            print(f"{bonus_dict[self.type][other.type]} + {self.ribbons()} + {self.offensive_abilities(ctx, other)} + {self.weapon_upgrade()}")
+            print(f"net atk: {self.attack * atk_modif} \n{bonus_dict[self.type][other.type]} + {self.ribbons()} + {self.offensive_abilities(ctx, other)} + {self.weapon_upgrade()}")
 
-        print(f"real defense of {other.name}: {defense} - modifier: {def_modif} - net def {defense_nopercent}")
+        print(f"real defense of {other.name}: {defense} - modifier: {def_modif} - net def {round(defense_nopercent)}")
         if ctx.debug:
-            print(f"{bonus_dict[other.type][self.type]} + {other.ribbons()} + {other.defensive_abilities(ctx, self)} + {other.armor_upgrade()} + {terrain_bonus}")
+            print(f"net defense {other.defense * def_modif} \n{bonus_dict[other.type][self.type]} + {other.ribbons()} + {other.defensive_abilities(ctx, self)} + {other.armor_upgrade()} + {terrain_bonus}")
 
         print(f"health lost {lost_h}")
         print("")
