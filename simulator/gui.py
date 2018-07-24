@@ -17,6 +17,159 @@ class RedirectStream(_io.TextIOWrapper):
     def write(self, text):
         self.box.insertPlainText(text)
 
+class SideFrame(QFrame):
+    def __init__(self, parent, **args):
+        super().__init__(parent)
+
+        self.unit = units.Arbalests()
+        self.terrain = terrains.Bridge()
+        self.parent = parent
+        self.name = args["name"]
+
+        self.unit_construct()
+        self.unit_set()
+
+        self.terrain_construct()
+        self.terrain_set()
+
+    def unit_construct(self):
+
+        self.UnitComboBox = QComboBox(self)
+        unit = QLabel(self.name, self)
+        self.UnitComboBox.addItems(self.parent.unit_list)
+
+        self.UnitComboBox.activated[str].connect(self.unit_selected)
+
+        unit.move(300, 35)
+        self.UnitComboBox.move(385, 35)
+
+        QLabel("Health", self).move(25, 100)
+        self.health = QLineEdit(self)
+        self.health.move(150, 100)
+        self.health.textEdited.connect(lambda text : self.unit.set("health", int(text)) if text.isdigit() else self.unit.set("health", 100))
+
+        QLabel("Attack", self).move(25, 150)
+        self.attack = QLineEdit(self)
+        self.attack.move(150, 150)
+        self.attack.textEdited.connect(lambda text : self.unit.set("attack", int(text)) if text.isdigit() else self.unit.set("attack", 50))
+
+        self.atk_upgrade = QCheckBox("Upgraded?", self)
+        self.atk_upgrade.move(150, 185)
+        self.atk_upgrade.stateChanged.connect(lambda state: self.unit.set("atk_upgrade", state == Qt.Checked))
+
+        QLabel("Defense", self).move(25, 250)
+        self.defense = QLineEdit(self)
+        self.defense.move(150, 250)
+        self.defense.textEdited.connect(lambda text : self.unit.set("defense", int(text)) if text.isdigit() else self.unit.set("defense", 50))
+
+        self.def_upgrade = QCheckBox("Upgraded?", self)
+        self.def_upgrade.move(150, 285)
+        self.def_upgrade.stateChanged.connect(lambda state: self.unit.set("def_upgrade", state == Qt.Checked))
+
+        QLabel("Range", self).move(25, 350)
+        self.range = QLineEdit(self)
+        self.range.move(150, 350)
+        self.range.textEdited.connect(lambda text : self.unit.set("range", int(text)) if text.isdigit() else self.unit.set("range", 1))
+
+        QLabel("Vision", self).move(450, 100)
+        self.vision = QLineEdit(self)
+        self.vision.move(575, 100)
+        self.vision.textEdited.connect(lambda text : self.unit.set("vision", int(text)) if text.isdigit() else self.unit.set("vision", 7))
+
+        QLabel("Movement", self).move(450, 150)
+        self.movement = QLineEdit(self)
+        self.movement.move(575, 150)
+        self.movement.textEdited.connect(lambda text : self.unit.set("movement", int(text)) if text.isdigit() else self.unit.set("movement", 7))
+
+        QLabel("Type", self).move(450, 200)
+        self.type = QComboBox(self)
+        self.type.addItems(self.parent.types)
+        self.type.move(575, 200)
+        self.type.activated[str].connect(lambda text : self.unit.set("type", objects.UnitType[text]))
+
+        QLabel("Battles", self).move(450, 250)
+        self.battles = QLineEdit(self)
+        self.battles.move(575, 250)
+        self.battles.textEdited.connect(lambda text : self.unit.set("battles", int(text)) if text.isdigit() else self.unit.set("battles", 0))
+
+    def unit_set(self):
+        self.health.setText(str(self.unit.health))
+        self.attack.setText(str(self.unit.attack))
+        self.defense.setText(str(self.unit.defense))
+        self.range.setText(str(self.unit.range))
+        self.battles.setText(str(self.unit.battles))
+        self.vision.setText(str(self.unit.vision))
+        self.movement.setText(str(self.unit.movement))
+        self.type.setCurrentIndex(self.parent.types.index(self.unit.type.name))
+        self.atk_upgrade.setChecked(self.unit.atk_upgrade)
+        self.def_upgrade.setChecked(self.unit.def_upgrade)
+
+    def terrain_construct(self):
+        self.TerrainComboBox = QComboBox(self)
+        terrain = QLabel("Terrain", self)
+        self.TerrainComboBox.addItems(self.parent.terrains_list)
+        
+        self.TerrainComboBox.activated[str].connect(self.terrain_selected)
+
+        terrain.move(300, 435)
+        self.TerrainComboBox.move(400, 435)
+
+        QLabel("Defense+", self).move(25, 500)
+        self.tdefense = QLineEdit(self)
+        self.tdefense.move(150, 500)
+        self.tdefense.textEdited.connect(lambda text : self.terrain.set("def_bonus", float(text)) if text.isdigit() else self.terrain.set("def_bonus", 0))
+
+        QLabel("Range+", self).move(25, 550)
+        self.trange = QLineEdit(self)
+        self.trange.move(150, 550)
+        self.trange.textEdited.connect(lambda text : self.terrain.set("rng_bonus", int(text)) if text.isdigit() else self.terrain.set("rng_bonus", 0))
+
+        QLabel("Vision+", self).move(25, 600)
+        self.tvision = QLineEdit(self)
+        self.tvision.move(150, 600)
+        self.tvision.textEdited.connect(lambda text : self.terrain.set("vis_bonus", int(text)) if text.isdigit() else self.terrain.set("vis_bonus", 0))
+
+        QLabel("Type", self).move(25, 650)
+        self.ttype = QComboBox(self)
+        self.ttype.addItems(self.parent.ttypes)
+        self.ttype.move(150, 650)
+        self.ttype.activated[str].connect(lambda text : self.terrain.set("type", objects.TerrainType[text]))
+
+        QLabel("Movement", self).move(450, 500)
+        self.tmovement = QLineEdit(self)
+        self.tmovement.move(575, 500)
+        self.tmovement.textEdited.connect(lambda text : self.terrain.set("mov_cost", int(text)) if text.isdigit() else self.terrain.set("mov_cost", 1))
+
+        QLabel("Vision", self).move(450, 550)
+        self.tvis = QLineEdit(self)
+        self.tvis.move(575, 550)
+        self.tvis.textEdited.connect(lambda text : self.terrain.set("vis_cost", int(text)) if text.isdigit() else self.terrain.set("vis_cost", 1))
+
+        QLabel("Road?", self).move(450, 600)
+        self.tsubtype = QCheckBox("", self)
+        self.tsubtype.move(575, 600)
+        self.tsubtype.stateChanged.connect(lambda state: self.terrain.set("sub_type", objects.TerrainSubType.road) if state == Qt.Checked else self.terrain.set("sub_type", objects.TerrainSubType.normal))
+
+    def terrain_set(self):
+        self.tdefense.setText(str(self.terrain.def_bonus * 100))
+        self.trange.setText(str(self.terrain.rng_bonus))
+        self.tvision.setText(str(self.terrain.vis_bonus))
+        self.tmovement.setText(str(self.terrain.mov_cost))
+        self.tvis.setText(str(self.terrain.vis_cost))
+        self.ttype.setCurrentIndex(self.parent.ttypes.index(self.terrain.type.name))
+        self.tsubtype.setChecked(self.terrain.sub_type == objects.TerrainSubType.road)
+        
+    def unit_selected(self, text):
+        c = getattr(units, text)
+        self.unit = c()
+        self.unit_set()
+
+    def terrain_selected(self, text):
+        c = getattr(terrains, text)
+        self.terrain = c()
+        self.terrain_set()
+
+
 
 class GUI(QWidget):
     def __init__(self):
@@ -26,12 +179,6 @@ class GUI(QWidget):
         self.types = ['cavalry', 'infantry', 'ranged', 'siege', 'structure']
         self.ttypes = ['bridge', 'desert', 'ford', 'forest', 'hill', 'mountain', 'plain', 'structure', 'swamp']
 
-        self.unit1 = units.Arbalests()
-        self.unit2 = units.Arbalests()
-
-        self.terrain1 = terrains.Bridge()
-        self.terrain2 = terrains.Bridge()
-
         self.distance = 1
         self.debug = False
 
@@ -40,10 +187,10 @@ class GUI(QWidget):
     def initUI(self):
         hbox = QHBoxLayout(self)
 
-        self.left = QFrame(self)
+        self.left = SideFrame(self, name="Attacker")
         self.left.setFrameShape(QFrame.StyledPanel)
  
-        self.right = QFrame(self)
+        self.right = SideFrame(self, name="Defender")
         self.right.setFrameShape(QFrame.StyledPanel)
 
         self.bottom = QFrame(self)
@@ -59,19 +206,6 @@ class GUI(QWidget):
 
         hbox.addWidget(splitter2)
         self.setLayout(hbox)
-
-        self.unit1_construct()
-        self.unit1_set()
-
-        self.unit2_construct()
-        self.unit2_set()
-
-        self.terrain1_construct()
-        self.terrain1_set()
-
-        self.terrain2_construct()
-        self.terrain2_set()
-
 
         self.fight_btn = QPushButton("Fight", self.bottom)
         self.fight_btn.resize(self.fight_btn.sizeHint())
@@ -109,281 +243,11 @@ class GUI(QWidget):
         self.debug_b.move(650, 60)
         self.debug_b.stateChanged.connect(lambda state: self.__setattr__("debug", state == Qt.Checked))
 
-
         self.setGeometry(300, 300, 900, 900)
         self.setWindowTitle('AoE: Age of Kings Battle Simulator')
         self.showMaximized()
 
         self.show()
-
-    def unit1_construct(self):
-
-        self.UnitComboBoxLeft = QComboBox(self.left)
-        unit1 = QLabel("Attacker", self.left)
-        self.UnitComboBoxLeft.addItems(self.unit_list)
-
-        self.UnitComboBoxLeft.activated[str].connect(self.unit1_selected)
-
-        unit1.move(300, 35)
-        self.UnitComboBoxLeft.move(385, 35)
-
-        QLabel("Health", self.left).move(25, 100)
-        self.health_left = QLineEdit(self.left)
-        self.health_left.move(150, 100)
-        self.health_left.textEdited.connect(lambda text : self.unit1.set("health", int(text)) if text.isdigit() else self.unit1.set("health", 100))
-
-        QLabel("Attack", self.left).move(25, 150)
-        self.attack_left = QLineEdit(self.left)
-        self.attack_left.move(150, 150)
-        self.attack_left.textEdited.connect(lambda text : self.unit1.set("attack", int(text)) if text.isdigit() else self.unit1.set("attack", 50))
-
-        self.atk_upgrade_left = QCheckBox("Upgraded?", self.left)
-        self.atk_upgrade_left.move(150, 185)
-        self.atk_upgrade_left.stateChanged.connect(lambda state: self.unit1.set("atk_upgrade", state == Qt.Checked))
-
-        QLabel("Defense", self.left).move(25, 250)
-        self.defense_left = QLineEdit(self.left)
-        self.defense_left.move(150, 250)
-        self.defense_left.textEdited.connect(lambda text : self.unit1.set("defense", int(text)) if text.isdigit() else self.unit1.set("defense", 50))
-
-        self.def_upgrade_left = QCheckBox("Upgraded?", self.left)
-        self.def_upgrade_left.move(150, 285)
-        self.def_upgrade_left.stateChanged.connect(lambda state: self.unit1.set("def_upgrade", state == Qt.Checked))
-
-        QLabel("Range", self.left).move(25, 350)
-        self.range_left = QLineEdit(self.left)
-        self.range_left.move(150, 350)
-        self.range_left.textEdited.connect(lambda text : self.unit1.set("range", int(text)) if text.isdigit() else self.unit1.set("range", 1))
-
-        QLabel("Vision", self.left).move(450, 100)
-        self.vision_left = QLineEdit(self.left)
-        self.vision_left.move(575, 100)
-        self.vision_left.textEdited.connect(lambda text : self.unit1.set("vision", int(text)) if text.isdigit() else self.unit1.set("vision", 7))
-
-        QLabel("Movement", self.left).move(450, 150)
-        self.movement_left = QLineEdit(self.left)
-        self.movement_left.move(575, 150)
-        self.movement_left.textEdited.connect(lambda text : self.unit1.set("movement", int(text)) if text.isdigit() else self.unit1.set("movement", 7))
-
-        QLabel("Type", self.left).move(450, 200)
-        self.type_left = QComboBox(self.left)
-        self.type_left.addItems(self.types)
-        self.type_left.move(575, 200)
-        self.type_left.activated[str].connect(lambda text : self.unit1.set("type", objects.UnitType[text]))
-
-        QLabel("Battles", self.left).move(450, 250)
-        self.battles_left = QLineEdit(self.left)
-        self.battles_left.move(575, 250)
-        self.battles_left.textEdited.connect(lambda text : self.unit1.set("battles", int(text)) if text.isdigit() else self.unit1.set("battles", 0))
-
-    def unit1_set(self):
-        self.health_left.setText(str(self.unit1.health))
-        self.attack_left.setText(str(self.unit1.attack))
-        self.defense_left.setText(str(self.unit1.defense))
-        self.range_left.setText(str(self.unit1.range))
-        self.battles_left.setText(str(self.unit1.battles))
-        self.vision_left.setText(str(self.unit1.vision))
-        self.movement_left.setText(str(self.unit1.movement))
-        self.type_left.setCurrentIndex(self.types.index(self.unit1.type.name))
-
-    def terrain1_construct(self):
-        self.TerrainComboBoxLeft = QComboBox(self.left)
-        terrain1 = QLabel("Terrain", self.left)
-        self.TerrainComboBoxLeft.addItems(self.terrains_list)
-        
-        self.TerrainComboBoxLeft.activated[str].connect(self.terrain1_selected)
-
-        terrain1.move(300, 435)
-        self.TerrainComboBoxLeft.move(400, 435)
-
-        QLabel("Defense+", self.left).move(25, 500)
-        self.tdefense_left = QLineEdit(self.left)
-        self.tdefense_left.move(150, 500)
-        self.tdefense_left.textEdited.connect(lambda text : self.terrain1.set("def_bonus", float(text)) if text.isdigit() else self.terrain1.set("def_bonus", 0))
-
-        QLabel("Range+", self.left).move(25, 550)
-        self.trange_left = QLineEdit(self.left)
-        self.trange_left.move(150, 550)
-        self.trange_left.textEdited.connect(lambda text : self.terrain1.set("rng_bonus", int(text)) if text.isdigit() else self.terrain1.set("rng_bonus", 0))
-
-        QLabel("Vision+", self.left).move(25, 600)
-        self.tvision_left = QLineEdit(self.left)
-        self.tvision_left.move(150, 600)
-        self.tvision_left.textEdited.connect(lambda text : self.terrain1.set("vis_bonus", int(text)) if text.isdigit() else self.terrain1.set("vis_bonus", 0))
-
-        QLabel("Type", self.left).move(25, 650)
-        self.ttype_left = QComboBox(self.left)
-        self.ttype_left.addItems(self.ttypes)
-        self.ttype_left.move(150, 650)
-        self.ttype_left.activated[str].connect(lambda text : self.terrain1.set("type", objects.TerrainType[text]))
-
-        QLabel("Movement", self.left).move(450, 500)
-        self.tmovement_left = QLineEdit(self.left)
-        self.tmovement_left.move(575, 500)
-        self.tmovement_left.textEdited.connect(lambda text : self.terrain1.set("mov_cost", int(text)) if text.isdigit() else self.terrain1.set("mov_cost", 1))
-
-        QLabel("Vision", self.left).move(450, 550)
-        self.tvis_left = QLineEdit(self.left)
-        self.tvis_left.move(575, 550)
-        self.tvis_left.textEdited.connect(lambda text : self.terrain1.set("vis_cost", int(text)) if text.isdigit() else self.terrain1.set("vis_cost", 1))
-
-        QLabel("Road?", self.left).move(450, 600)
-        self.tsubtype_left = QCheckBox("", self.left)
-        self.tsubtype_left.move(575, 600)
-        self.tsubtype_left.stateChanged.connect(lambda state: self.terrain1.set("sub_type", objects.TerrainSubType.road) if state == Qt.Checked else self.terrain1.set("sub_type", objects.TerrainSubType.normal))
-
-    def terrain1_set(self):
-        self.tdefense_left.setText(str(self.terrain1.def_bonus * 100))
-        self.trange_left.setText(str(self.terrain1.rng_bonus))
-        self.tvision_left.setText(str(self.terrain1.vis_bonus))
-        self.tmovement_left.setText(str(self.terrain1.mov_cost))
-        self.tvis_left.setText(str(self.terrain1.vis_cost))
-        self.ttype_left.setCurrentIndex(self.ttypes.index(self.terrain1.type.name))
-        self.tsubtype_left.setChecked(self.terrain1.sub_type == objects.TerrainSubType.road)
-        
-    def unit1_selected(self, text):
-        c = getattr(units, text)
-        self.unit1 = c()
-        self.unit1_set()
-
-    def terrain1_selected(self, text):
-        c = getattr(terrains, text)
-        self.terrain1 = c()
-        self.terrain1_set()
-
-    def unit2_construct(self):
-        self.UnitComboBoxRight = QComboBox(self.right)
-        unit2 = QLabel("Defender ", self.right)
-        self.UnitComboBoxRight.addItems(self.unit_list)
-
-        self.UnitComboBoxRight.activated[str].connect(self.unit2_selected)
-
-        unit2.move(300, 35)
-        self.UnitComboBoxRight.move(400, 35)
-
-        QLabel("Health", self.right).move(25, 100)
-        self.health_right = QLineEdit(self.right)
-        self.health_right.move(150, 100)
-        self.health_right.textEdited.connect(lambda text : self.unit2.set("health", int(text)) if text.isdigit() else self.unit2.set("health", 100))
-
-        QLabel("Attack", self.right).move(25, 150)
-        self.attack_right = QLineEdit(self.right)
-        self.attack_right.move(150, 150)
-        self.attack_right.textEdited.connect(lambda text : self.unit2.set("attack", int(text)) if text.isdigit() else self.unit2.set("attack", 50))
-
-        self.atk_upgrade_right = QCheckBox("Upgraded?", self.right)
-        self.atk_upgrade_right.move(150, 185)
-        self.atk_upgrade_right.stateChanged.connect(lambda state: self.unit2.set("atk_upgrade", state == Qt.Checked))
-
-        QLabel("Defense", self.right).move(25, 250)
-        self.defense_right = QLineEdit(self.right)
-        self.defense_right.move(150, 250)
-        self.defense_right.textEdited.connect(lambda text : self.unit2.set("defense", int(text)) if text.isdigit() else self.unit2.set("defense", 50))
-
-        self.def_upgrade_right = QCheckBox("Upgraded?", self.right)
-        self.def_upgrade_right.move(150, 285)
-        self.def_upgrade_right.stateChanged.connect(lambda state: self.unit2.set("def_upgrade", state == Qt.Checked))
-
-        QLabel("Range", self.right).move(25, 350)
-        self.range_right = QLineEdit(self.right)
-        self.range_right.move(150, 350)
-        self.range_right.textEdited.connect(lambda text : self.unit2.set("range", int(text)) if text.isdigit() else self.unit2.set("range", 1))
-
-        QLabel("Vision", self.right).move(450, 100)
-        self.vision_right = QLineEdit(self.right)
-        self.vision_right.move(575, 100)
-        self.vision_right.textEdited.connect(lambda text : self.unit2.set("vision", int(text)) if text.isdigit() else self.unit2.set("vision", 7))
-
-        QLabel("Movement", self.right).move(450, 150)
-        self.movement_right = QLineEdit(self.right)
-        self.movement_right.move(575, 150)
-        self.movement_right.textEdited.connect(lambda text : self.unit2.set("movement", int(text)) if text.isdigit() else self.unit2.set("movement", 7))
-
-        QLabel("Type", self.right).move(450, 200)
-        self.type_right = QComboBox(self.right)
-        self.type_right.addItems(self.types)
-        self.type_right.move(575, 200)
-        self.type_right.activated[str].connect(lambda text : self.unit2.set("type", objects.UnitType[text]))
-
-        QLabel("Battles", self.right).move(450, 250)
-        self.battles_right = QLineEdit(self.right)
-        self.battles_right.move(575, 250)
-        self.battles_right.textEdited.connect(lambda text : self.unit2.set("battles", int(text)) if text.isdigit() else self.unit2.set("battles", 0))
-        
-    def unit2_set(self):
-        self.health_right.setText(str(self.unit2.health))
-        self.attack_right.setText(str(self.unit2.attack))
-        self.defense_right.setText(str(self.unit2.defense))
-        self.range_right.setText(str(self.unit2.range))
-        self.battles_right.setText(str(self.unit2.battles))
-        self.vision_right.setText(str(self.unit2.vision))
-        self.movement_right.setText(str(self.unit2.movement))
-        self.type_right.setCurrentIndex(self.types.index(self.unit2.type.name))
-
-    def terrain2_construct(self):
-        self.TerrainComboBoxRight = QComboBox(self.right)
-        terrain2 = QLabel("Terrain", self.right)
-        self.TerrainComboBoxRight.addItems(self.terrains_list)
-        
-        self.TerrainComboBoxRight.activated[str].connect(self.terrain2_selected)
-
-        terrain2.move(300, 435)
-        self.TerrainComboBoxRight.move(400, 435)
-
-        QLabel("Defense+", self.right).move(25, 500)
-        self.tdefense_right = QLineEdit(self.right)
-        self.tdefense_right.move(150, 500)
-        self.tdefense_right.textEdited.connect(lambda text : self.terrain2.set("def_bonus", float(text)) if text.isdigit() else self.terrain2.set("def_bonus", 0))
-
-        QLabel("Range+", self.right).move(25, 550)
-        self.trange_right = QLineEdit(self.right)
-        self.trange_right.move(150, 550)
-        self.trange_right.textEdited.connect(lambda text : self.terrain2.set("rng_bonus", int(text)) if text.isdigit() else self.terrain2.set("rng_bonus", 0))
-
-        QLabel("Vision+", self.right).move(25, 600)
-        self.tvision_right = QLineEdit(self.right)
-        self.tvision_right.move(150, 600)
-        self.tvision_right.textEdited.connect(lambda text : self.terrain2.set("vis_bonus", int(text)) if text.isdigit() else self.terrain2.set("vis_bonus", 0))
-
-        QLabel("Type", self.right).move(25, 650)
-        self.ttype_right = QComboBox(self.right)
-        self.ttype_right.addItems(self.ttypes)
-        self.ttype_right.move(150, 650)
-        self.ttype_right.activated[str].connect(lambda text : self.terrain2.set("type", objects.TerrainType[text]))
-
-        QLabel("Movement", self.right).move(450, 500)
-        self.tmovement_right = QLineEdit(self.right)
-        self.tmovement_right.move(575, 500)
-        self.tmovement_right.textEdited.connect(lambda text : self.terrain2.set("mov_cost", int(text)) if text.isdigit() else self.terrain2.set("mov_cost", 1))
-
-        QLabel("Vision", self.right).move(450, 550)
-        self.tvis_right = QLineEdit(self.right)
-        self.tvis_right.move(575, 550)
-        self.tvis_right.textEdited.connect(lambda text : self.terrain2.set("vis_cost", int(text)) if text.isdigit() else self.terrain2.set("vis_cost", 1))
-
-        QLabel("Road?", self.right).move(450, 600)
-        self.tsubtype_right = QCheckBox("", self.right)
-        self.tsubtype_right.move(575, 600)
-        self.tsubtype_right.stateChanged.connect(lambda state: self.terrain2.set("sub_type", objects.TerrainSubType.road) if state == Qt.Checked else self.terrain2.set("sub_type", objects.TerrainSubType.normal))
-
-    def terrain2_set(self):
-        self.tdefense_right.setText(str(self.terrain2.def_bonus * 100))
-        self.trange_right.setText(str(self.terrain2.rng_bonus))
-        self.tvision_right.setText(str(self.terrain2.vis_bonus))
-        self.tmovement_right.setText(str(self.terrain2.mov_cost))
-        self.tvis_right.setText(str(self.terrain2.vis_cost))
-        self.ttype_right.setCurrentIndex(self.ttypes.index(self.terrain2.type.name))
-        self.tsubtype_right.setChecked(self.terrain2.sub_type == objects.TerrainSubType.road)
-
-    def unit2_selected(self, text):
-        c = getattr(units, text)
-        self.unit2 = c()
-        self.unit2_set()
-
-    def terrain2_selected(self, text):
-        c = getattr(terrains, text)
-        self.terrain2 = c()
-        self.terrain2_set()
 
     def closeEvent(self, event):
         
@@ -417,55 +281,57 @@ class GUI(QWidget):
                 ctx.attacker.fight(ctx, ctx.defender)
 
     def initiate(self):
-        if self.unit1.health == 0 or self.unit2.health == 0:
+        if self.left.unit.health == 0 or self.right.unit.health == 0:
             print("!One of the units is dead!\n")
             return
 
         ctx = objects.Context(
-                attacker = self.unit1,
-                defender = self.unit2,
-                atk_terrain = self.terrain1,
-                def_terrain = self.terrain2,
+                attacker = self.left.unit,
+                defender = self.right.unit,
+                atk_terrain = self.left.terrain,
+                def_terrain = self.right.terrain,
                 distance = self.distance,
                 debug = self.debug
             )
+
         print("[battle]")
         self.battle(ctx)
 
         print("[Final Stats]")
-        self.unit1 = ctx.attacker
-        self.unit2 = ctx.defender
-        print(self.unit1)
+        self.left.unit = ctx.attacker
+        self.right.unit = ctx.defender
+        print(ctx.attacker)
         print("...")
-        print(self.unit2)
+        print(ctx.defender)
 
         print("")
-        self.unit1_set()
-        self.unit2_set()
+        self.left.unit_set()
+        self.right.unit_set()
 
     def inverse_units(self):
-        temp = self.unit1
-        temp2 = self.unit2
-        self.UnitComboBoxRight.setCurrentIndex(self.unit_list.index(temp.__class__.__name__))
-        self.UnitComboBoxLeft.setCurrentIndex(self.unit_list.index(temp2.__class__.__name__))
+        temp = self.left.unit
+        temp2 = self.right.unit
+        self.right.UnitComboBox.setCurrentIndex(self.unit_list.index(temp.__class__.__name__))
+        self.left.UnitComboBox.setCurrentIndex(self.unit_list.index(temp2.__class__.__name__))
 
-        self.unit1 = temp2
-        self.unit2 = temp
+        self.left.unit = temp2
+        self.right.unit = temp
 
-        self.unit1_set()
-        self.unit2_set()
+        self.left.unit_set()
+        self.right.unit_set()
 
     def inverse_terrain(self):
-        temp = self.terrain1
-        temp2 = self.terrain2
-        self.TerrainComboBoxRight.setCurrentIndex(self.terrains_list.index(temp.name))
-        self.TerrainComboBoxLeft.setCurrentIndex(self.terrains_list.index(temp2.name))
-        
-        self.terrain1 = temp2
-        self.terrain2 = temp
+        temp = self.left.terrain
+        temp2 = self.right.terrain
 
-        self.terrain1_set()
-        self.terrain2_set()
+        self.right.TerrainComboBox.setCurrentIndex(self.terrains_list.index(temp.name))
+        self.left.TerrainComboBox.setCurrentIndex(self.terrains_list.index(temp2.name))
+        
+        self.left.terrain = temp2
+        self.right.terrain = temp
+
+        self.left.terrain_set()
+        self.right.terrain_set()
 
 
 if __name__ == '__main__':
