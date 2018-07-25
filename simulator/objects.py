@@ -138,6 +138,7 @@ class Context:
         self.distance = kwargs["distance"]
         self.debug = kwargs["debug"]
 
+
 bonus_dict = {
     UnitType.infantry:  {UnitType.infantry: 0,    UnitType.ranged: 0,    UnitType.cavalry: 0, UnitType.siege: 0.33, UnitType.structure: 0.33}, 
     UnitType.ranged:    {UnitType.infantry: 0,    UnitType.ranged: 0,    UnitType.cavalry: 0, UnitType.siege: 0,    UnitType.structure: -0.5},
