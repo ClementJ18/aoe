@@ -8,15 +8,20 @@ the data given by the game with hundreds of battles conducted in the game under 
 conditions. The simulator still has a minor margin of error of usually one or two health
 points due to the reason that rounding of decimals is conducted behind the scenes.
 
-![alt text](https://i.imgur.com/GvZcUmM.png "v1 gui")
-![alt text](https://imgur.com/wop9ehF.png "current gui")
+![current gui](https://imgur.com/JkP0J0p.png "current gui")
+
+## Previous GUI Versions
+* v1: https://i.imgur.com/GvZcUmM.png
+* v2: https://imgur.com/wop9ehF.png
+
 
 ## TODO
 * [x] Add the distance slider to emulate long ranged battles
 * [ ] Fix remaining broken math (something to do with health percentages)
-* [ ] Overall quality improvement of the code
+* [x] Low level quality improvement of code
+* [ ] High level quality improvement of code
 
 ## Possibilities
-* [ ] Unit and Terrain creators
+* [x] Unit and Terrain creators
 * [ ] Ability to save states
 * [x] More details about battles  
