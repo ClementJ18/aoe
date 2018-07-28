@@ -49,8 +49,10 @@ class Unit:
             "other": other,
             "ctx": ctx,
             "self": self,
-            "objects": sys.modules["objects"]
-
+            "objects": sys.modules["objects"],
+            "UnitType": UnitType,
+            "TerrainType": TerrainType,
+            "TerrainSubType": TerrainSubType
         }
 
         abilities_modif = 0

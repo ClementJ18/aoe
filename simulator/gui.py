@@ -69,23 +69,36 @@ class AbilityCreator(QMainWindow):
         QLabel("Name", self).move(50, 50)
         self.name = QLineEdit(self)
         self.name.move(150, 50)
+        self.name.resize(200, 40)
+        self.name.setText("Ability Name")
 
-        QLabel("Function", self).move(50, 100)
+        QLabel("Modifiers", self).move(50, 220)
+        QLabel("If True", self).move(50, 250)
+        self.modifier_true = QLineEdit(self)
+        self.modifier_true.move(150, 250)
+        self.modifier_true.setText("0")
+
+        QLabel("If False", self).move(50, 280)
+        self.modifier_false = QLineEdit(self)
+        self.modifier_false.move(150, 280)
+        self.modifier_false.setText("0")
+
+        QLabel("Condition", self).move(50, 120)
         self.func = QLineEdit(self)
         self.func.move(50, 150)
         self.func.resize(600 , 30)
+        self.func.setText("True")
 
         self.abilities_btn = QPushButton("Add Ability", self)
         self.abilities_btn.resize(self.abilities_btn.sizeHint())
-        self.abilities_btn.move(50, 200)
+        self.abilities_btn.move(50, 400)
         self.abilities_btn.clicked.connect(self.add_ability)
 
         self.setWindowTitle("Ability Creator")
         self.setWindowModality(Qt.ApplicationModal)
 
-
     def add_ability(self):
-        self.parent.parent.custom_abilities[self.name.text()] = self.func.text()
+        self.parent.parent().parent().custom_abilities[self.name.text()] = f"{self.modifier_true.text()} if {self.func.text()} else {self.modifier_false.text()}"
         self.close()  
 
 class SideFrame(QFrame):
