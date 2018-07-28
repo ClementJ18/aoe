@@ -14,7 +14,6 @@ points due to the reason that rounding of decimals is conducted behind the scene
 * v1: https://i.imgur.com/GvZcUmM.png
 * v2: https://imgur.com/wop9ehF.png
 
-
 ## TODO
 * [x] Add the distance slider to emulate long ranged battles
 * [ ] Fix remaining broken math (something to do with health percentages)

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QFrame, 
     QSplitter, QStyleFactory, QApplication, QMessageBox, QLabel, 
     QComboBox, QLineEdit, QPushButton, QCheckBox, QSlider, QLCDNumber,
-    QPlainTextEdit, QMenuBar)
+    QPlainTextEdit, QMenuBar, QMainWindow)
 from PyQt5.QtCore import Qt
 
 import sys
@@ -12,6 +12,7 @@ import traceback
 import units
 import terrains
 import objects
+import abilities
 
 class RedirectStream(_io.TextIOWrapper):
     def __init__(self, box):
@@ -19,6 +20,73 @@ class RedirectStream(_io.TextIOWrapper):
 
     def write(self, text):
         self.box.insertPlainText(text)
+
+class AbilityPicker(QMainWindow):
+    def __init__(self, parent=None):
+        super(AbilityPicker, self).__init__(parent)
+        self.parent = parent
+        self.initUI()
+
+    def initUI(self):
+        horizontal = 50
+        vertical = 50
+
+        for ability in abilities.ability_dict:
+            check = QCheckBox(ability, self)
+            check.move(vertical, horizontal)
+            check.stateChanged.connect(lambda state: self.parent.unit.abilities.append(ability) if state == Qt.Checked else self.parent.unit.abilities.remove(ability))
+            check.setChecked(ability in self.parent.unit.abilities)
+            check.resize(check.sizeHint())
+            if horizontal == 500:
+                horizontal = 0
+                vertical += 200
+
+            horizontal += 50
+
+        custom_abilities = self.parent.parent.custom_abilities
+        for ability in custom_abilities:
+            check = QCheckBox(ability, self)
+            check.move(vertical, horizontal)
+            check.stateChanged.connect(lambda state: self.parent.unit.abilities.append(ability) if state == Qt.Checked else self.parent.unit.abilities.remove(ability))
+            check.setChecked(ability in self.parent.unit.abilities)
+            check.resize(check.sizeHint())
+            if horizontal == 400:
+                horizontal = 0
+                vertical += 200
+
+            horizontal += 50
+
+        self.setWindowTitle("Ability Picker")
+        self.setWindowModality(Qt.ApplicationModal)
+
+class AbilityCreator(QMainWindow):
+    def __init__(self, parent=None):
+        super(AbilityCreator, self).__init__(parent)
+        self.parent = parent
+        self.initUI()
+
+    def initUI(self):
+        QLabel("Name", self).move(50, 50)
+        self.name = QLineEdit(self)
+        self.name.move(150, 50)
+
+        QLabel("Function", self).move(50, 100)
+        self.func = QLineEdit(self)
+        self.func.move(50, 150)
+        self.func.resize(600 , 30)
+
+        self.abilities_btn = QPushButton("Add Ability", self)
+        self.abilities_btn.resize(self.abilities_btn.sizeHint())
+        self.abilities_btn.move(50, 200)
+        self.abilities_btn.clicked.connect(self.add_ability)
+
+        self.setWindowTitle("Ability Creator")
+        self.setWindowModality(Qt.ApplicationModal)
+
+
+    def add_ability(self):
+        self.parent.parent.custom_abilities[self.name.text()] = self.func.text()
+        self.close()  
 
 class SideFrame(QFrame):
     def __init__(self, parent, **args):
@@ -28,6 +96,8 @@ class SideFrame(QFrame):
         self.terrain = terrains.Bridge()
         self.parent = parent
         self.name = args["name"]
+        self.ability_picker = AbilityPicker(self)
+        self.ability_picker.resize(800, 600)
 
         self.unit_construct()
         self.unit_set()
@@ -102,7 +172,12 @@ class SideFrame(QFrame):
         self.c_save = QPushButton("Save Unit", self)
         self.c_save.resize(self.c_save.sizeHint())
         self.c_save.move(1250, 100) 
-        self.c_save.clicked.connect(self.save_unit)   
+        self.c_save.clicked.connect(self.save_unit)
+
+        self.abilities_btn = QPushButton("Ability Picker", self)
+        self.abilities_btn.resize(self.abilities_btn.sizeHint())
+        self.abilities_btn.move(1350, 350)
+        self.abilities_btn.clicked.connect(lambda: self.ability_picker.show())     
 
     def unit_set(self):
         self.health.setText(str(self.unit.health))
@@ -116,6 +191,7 @@ class SideFrame(QFrame):
         self.atk_upgrade.setChecked(self.unit.atk_upgrade)
         self.def_upgrade.setChecked(self.unit.def_upgrade)
         self.c_name.setText(self.unit.name)
+        self.ability_picker.initUI()
 
     def terrain_construct(self):
         self.TerrainComboBox = QComboBox(self)
@@ -247,12 +323,14 @@ class GUI(QWidget):
         self.unit_list += self.custom_units.keys()
         self.unit_list = sorted(self.unit_list)
 
-
         with open("custom_terrains.json", "r") as f:
             self.custom_terrains = json.load(f)
         
         self.terrain_list += self.custom_terrains.keys()
         self.terrain_list = sorted(self.terrain_list)
+
+        with open("custom_abilities.json", "r") as f:
+            self.custom_abilities = json.load(f)
 
         self.distance = 1
         self.debug = False
@@ -273,6 +351,9 @@ class GUI(QWidget):
 
         self.bottom = QFrame(self)
         self.bottom.setFrameShape(QFrame.StyledPanel)
+
+        self.ability_creator = AbilityCreator(self.bottom)
+        self.ability_creator.resize(800, 500)
 
         splitter1 = QSplitter(Qt.Horizontal)
         splitter1.addWidget(self.left)
@@ -326,6 +407,11 @@ class GUI(QWidget):
         self.dist_box.activated[str].connect(lambda text: self.__setattr__("distance", int(text)))
         self.dist_box.move(150, 150)
 
+        self.abilities_btn = QPushButton("Ability Creator", self.bottom)
+        self.abilities_btn.resize(self.abilities_btn.sizeHint())
+        self.abilities_btn.move(250, 150)
+        self.abilities_btn.clicked.connect(lambda: self.ability_creator.show())
+
         self.b = QPlainTextEdit(self.bottom)
         self.b.setReadOnly(True)
         self.b.move(800, 50)
@@ -342,7 +428,7 @@ class GUI(QWidget):
         self.debug_b.stateChanged.connect(self.debug_checker)
 
         self.cmd = QPlainTextEdit(self.bottom)
-        self.cmd.resize(700, 50)
+        self.cmd.resize(700, 40)
         self.cmd.move(1550, 50)
         self.cmd.hide()
 
@@ -380,6 +466,9 @@ class GUI(QWidget):
             with open("custom_terrains.json", "w") as f:
                 json.dump(self.custom_terrains, f)
 
+            with open("custom_abilities.json", "w") as f:
+                json.dump(self.custom_abilities, f)
+
             event.accept()
         else:
             event.ignore()
@@ -388,7 +477,25 @@ class GUI(QWidget):
         ctx.attacker.battles += 1
         ctx.defender.battles += 1
 
-        if "first strike" in ctx.defender.abilities or ("skirmish" in ctx.defender.abilities and ctx.distance == 1) or ("anti-cavalry" in ctx.defender.abilities and ctx.attacker.type == objects.UnitType.cavalry and ctx.distance == 1):
+        def priority_check():
+            if "first strike" in ctx.attacker.abilities:
+                return False
+
+            if "first strike" in ctx.defender.abilities:
+                return True 
+
+            if ctx.distance > 1:
+                return False
+
+            if "skirmish" in ctx.defender.abilities:
+                return True
+
+            if "anti-cavalry" in ctx.defender.abilities and ctx.attacker.type == objects.UnitType.cavalry:
+                return True
+
+            return False
+
+        if priority_check():
             if ctx.distance <= ctx.defender.range:
                 ctx.status = 1
                 ctx.defender.fight(ctx, ctx.attacker)
@@ -404,6 +511,12 @@ class GUI(QWidget):
             if "rapid fire" in ctx.attacker.abilities:
                 ctx.attacker.fight(ctx, ctx.defender)
 
+        if "zeal" in ctx.attacker.abilities:
+            ctx.attacker.health += 20 if ctx.attacker.health + 20 <= 100 else 100 - ctx.attacker.health
+
+        if "zeal" in ctx.defender.abilities:
+            ctx.defender.health += 20 if ctx.defender.health + 20 <= 100 else 100 - ctx.defender.health
+
     def initiate(self):
         if self.left.unit.health == 0 or self.right.unit.health == 0:
             print("!One of the units is dead!\n")
@@ -415,7 +528,8 @@ class GUI(QWidget):
                 atk_terrain = self.left.terrain,
                 def_terrain = self.right.terrain,
                 distance = self.distance,
-                debug = self.debug
+                debug = self.debug,
+                custom_abilities = self.custom_abilities
             )
 
         print("[battle]")
@@ -456,7 +570,6 @@ class GUI(QWidget):
 
         self.left.terrain_set()
         self.right.terrain_set()
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

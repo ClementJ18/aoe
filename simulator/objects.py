@@ -1,4 +1,7 @@
 import enum
+import abilities
+from simpleeval import simple_eval
+import sys
 
 class Unit:
     def __init__(self, **kwargs):
@@ -22,25 +25,56 @@ class Unit:
         self.__setattr__(attr, value)
 
     def percent(self):
+        if "berserker" in self.abilities:
+            return 1
+
         return self.health / 100 if self.health <= 100 else 1
 
     def ribbons(self):
+        if "veteran" in self.abilities:
+            return ((self.battles // 2) * 0.15) if self.battles < 6 else 0.45
+
         return ((self.battles // 3) * 0.15) if self.battles < 9 else 0.45
 
-    def offensive_abilities(self, ctx, other):
-        return 0
-
-    def defensive_abilities(self, ctx, other):
-        return 0
-
+    @property   
     def armor_upgrade(self):
         return 0.25 if self.def_upgrade else 0
 
+    @property
     def weapon_upgrade(self):
         return 0.25 if self.atk_upgrade else 0
 
+    def process_abilities(self, ctx, other):
+        env = {
+            "other": other,
+            "ctx": ctx,
+            "self": self,
+            "objects": sys.modules["objects"]
+
+        }
+
+        abilities_modif = 0
+        for ability in self.abilities:
+            try:
+                abilities_modif += abilities.ability_dict[ability](self, ctx, other)
+            except KeyError:
+                abilities_modif += simple_eval(ctx.custom_abilities[ability], names=env)
+            except TypeError:
+                pass
+
+        return abilities_modif
+
     def fight(self, ctx, other):
         if self.health <= 0:
+            return
+
+        if "no counter" in self.abilities and ctx.status == 1:
+            return
+
+        if "only buildings" in self.abilities and other.type != UnitType.structure:
+            return
+
+        if "only units" in self.abilities and other.type == UnitType.structure:
             return
 
         if (ctx.distance == 1 and ctx.status == 0) or (ctx.distance > 1 and ctx.status == 0):
@@ -50,11 +84,11 @@ class Unit:
         else:
             terrain_bonus = 0
 
-        atk_modif = 1 + bonus_dict[self.type][other.type] + self.ribbons() + self.offensive_abilities(ctx, other) + self.weapon_upgrade()
+        atk_modif = 1 + bonus_dict[self.type][other.type] + self.ribbons() + self.process_abilities(ctx, other) + self.weapon_upgrade
         attack_nopercent = self.attack * atk_modif
         attack = attack_nopercent * self.percent()
 
-        def_modif = 1 + bonus_dict[other.type][self.type] + other.ribbons() + other.defensive_abilities(ctx, self) + other.armor_upgrade() + terrain_bonus
+        def_modif = 1 + bonus_dict[other.type][self.type] + other.ribbons() + other.process_abilities(ctx, self) + other.armor_upgrade + terrain_bonus
         defense_nopercent = other.defense * def_modif
         defense = defense_nopercent * other.percent()
 
@@ -68,11 +102,11 @@ class Unit:
 
         print(f"real attack of {self.name}: {attack} - modifier: {atk_modif} - net atk: {round(attack_nopercent)}")
         if ctx.debug:
-            print(f"net atk: {self.attack * atk_modif} \n{bonus_dict[self.type][other.type]} + {self.ribbons()} + {self.offensive_abilities(ctx, other)} + {self.weapon_upgrade()}")
+            print(f"net atk: {self.attack * atk_modif} \n{bonus_dict[self.type][other.type]} + {self.ribbons()} + {self.process_abilities(ctx, other)} + {self.weapon_upgrade}")
 
         print(f"real defense of {other.name}: {defense} - modifier: {def_modif} - net def {round(defense_nopercent)}")
         if ctx.debug:
-            print(f"net defense {other.defense * def_modif} \n{bonus_dict[other.type][self.type]} + {other.ribbons()} + {other.defensive_abilities(ctx, self)} + {other.armor_upgrade()} + {terrain_bonus}")
+            print(f"net defense {other.defense * def_modif} \n{bonus_dict[other.type][self.type]} + {other.ribbons()} + {other.process_abilities(ctx, self)} + {other.armor_upgrade} + {terrain_bonus}")
 
         print(f"health lost {lost_h}")
         print("")
@@ -137,6 +171,7 @@ class Context:
         self.status = 0 #0 attack 1 counter attack
         self.distance = kwargs["distance"]
         self.debug = kwargs["debug"]
+        self.custom_abilities = kwargs["custom_abilities"]
 
 
 bonus_dict = {

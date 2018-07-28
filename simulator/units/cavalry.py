@@ -9,12 +9,9 @@ class Templars(objects.Unit):
             range = 1,
             movement = 10,
             vision = 7,
-            type = objects.UnitType.cavalry
+            type = objects.UnitType.cavalry,
+            abilities = ["zeal", "plain charge"]
         )
-
-    def offensive_abilities(self, ctx, other):
-        self.health += 20
-        return 0.33 if ctx.def_terrain.type == objects.TerrainType.plain and ctx.status == 0 else 0
 
 class EliteTemplars(Templars):
     def __init__(self):
@@ -23,19 +20,25 @@ class EliteTemplars(Templars):
         self.attack = 250
         self.defense = 250
 
-class Knights(objects.Unit):
+class LightCav(objects.Unit):
     def __init__(self):
         super().__init__(
-            attack = 200,
-            defense = 200,
+            name = "Light Cavalry",
+            attack = 150,
+            defense = 150,
             range = 1,
             movement = 10,
             vision = 7,
-            type = objects.UnitType.cavalry
+            type = objects.UnitType.cavalry,
+            abilities = ["plain charge"]
         )
 
-    def offensive_abilities(self, ctx, other):
-        return 0.33 if ctx.def_terrain.type == objects.TerrainType.plain and ctx.status == 0 else 0
+class Knights(LightCav):
+    def __init__(self):
+        super().__init__()
+        self.name = "Knights"
+        self.attack = 200
+        self.defense = 200
 
 class Cavaliers(Knights):
     def __init__(self):
@@ -44,19 +47,12 @@ class Cavaliers(Knights):
         self.attack = 250
         self.defense = 250
 
-class Paladins(objects.Unit):
+class Paladins(Cavaliers):
     def __init__(self):
-        super().__init__(
-            attack = 300,
-            defense = 300,
-            range = 1,
-            movement = 10,
-            vision = 7,
-            type = objects.UnitType.cavalry
-        )
-
-    def offensive_abilities(self, ctx, other):
-        return 0.33 if ctx.def_terrain.type == objects.TerrainType.plain and ctx.status == 0 else 0
+        super().__init__()
+        self.name = "Paladins"
+        self.attack = 300
+        self.defense = 300
 
 class Camels(objects.Unit):
     def __init__(self):
@@ -66,21 +62,9 @@ class Camels(objects.Unit):
             range = 1,
             movement = 7,
             vision = 7,
-            type = objects.UnitType.cavalry
+            type = objects.UnitType.cavalry,
+            abilities = ["scared horses", "desert charge"]
         )
-
-    def offensive_abilities(self, ctx, other):
-        base = 0
-        if ctx.def_terrain.type == objects.TerrainType.desert and ctx.status == 0:
-            base += 0.33
-
-        if other.type == objects.UnitType.cavalry:
-            base += 0.33
-
-        return base
-
-    def defensive_abilities(self, ctx, other):
-        return 0.33 if other.type == objects.UnitType.cavalry else 0
 
 class HeavyCamels(Camels):
     def __init__(self):
@@ -98,21 +82,9 @@ class Mameluks(objects.Unit):
             range = 1,
             movement = 10,
             vision = 7,
-            type = objects.UnitType.cavalry
+            type = objects.UnitType.cavalry,
+            abilities = ["scared horses", "desert charge"]
         )
-
-    def offensive_abilities(self, ctx, other):
-        base = 0
-        if ctx.def_terrain.type == objects.TerrainType.desert and ctx.status == 0:
-            base += 0.33
-
-        if other.type == objects.UnitType.cavalry:
-            base += 0.33
-
-        return base
-
-    def defensive_abilities(self, ctx, other):
-        return 0.33 if other.type == objects.UnitType.cavalry else 0
 
 class EliteMameluks(Mameluks):
     def __init__(self):
@@ -133,21 +105,6 @@ class ScoutCav(objects.Unit):
             type = objects.UnitType.cavalry
         )
 
-class LightCav(objects.Unit):
-    def __init__(self):
-        super().__init__(
-            name = "Light Cavalry",
-            attack = 150,
-            defense = 150,
-            range = 1,
-            movement = 10,
-            vision = 7,
-            type = objects.UnitType.cavalry
-        )
-
-    def offensive_abilities(self, ctx, other):
-        return 0.33 if ctx.def_terrain.type == objects.TerrainType.plain and ctx.status == 0 else 0
-
 
 class WarElephants(objects.Unit):
     def __init__(self):
@@ -158,5 +115,6 @@ class WarElephants(objects.Unit):
             range = 1,
             movement = 7,
             vision = 7,
-            type = objects.UnitType.cavalry
+            type = objects.UnitType.cavalry,
+            abilities = ["cause fear"]
         )

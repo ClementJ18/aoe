@@ -1,0 +1,1 @@
+{"saboteur": "0.33 if other.type == objects.UnitType.siege else 0"}

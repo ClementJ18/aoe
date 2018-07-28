@@ -22,51 +22,33 @@ class Milita(objects.Unit):
             type = objects.UnitType.infantry
         )
 
-class MaA(objects.Unit):
+class MaA(Milita):
     def __init__(self):
-        super().__init__(
-            name = "Men at Arms",
-            attack = 150,
-            defense = 150,
-            range = 1,
-            movement = 7,
-            vision = 7,
-            type = objects.UnitType.infantry
-        )
+        super().__init__()
+        self.name = "Men at Arms"
+        self.attack = 150
+        self.defense = 150
 
-class Longswordsmen(objects.Unit):
+class Longswordsmen(MaA):
     def __init__(self):
-        super().__init__(
-            attack = 200,
-            defense = 200,
-            range = 1,
-            movement = 7,
-            vision = 7,
-            type = objects.UnitType.infantry
-        )
+        super().__init__()
+        self.name = "Longswordsmen"
+        self.attack = 200
+        self.defense = 200
 
-class TwoHanded(objects.Unit):
+class TwoHanded(Longswordsmen):
     def __init__(self):
-        super().__init__(
-            name = "Two Handed Swordsmen",
-            attack = 250,
-            defense = 250,
-            range = 1,
-            movement = 7,
-            vision = 7,
-            type = objects.UnitType.infantry
-        )
+        super().__init__()
+        self.name = "Two Handed Swordsmen"
+        self.attack = 250
+        self.defense = 250
 
-class Champions(objects.Unit):
+class Champions(TwoHanded):
     def __init__(self):
-        super().__init__(
-            attack = 300,
-            defense = 300,
-            range = 1,
-            movement = 7,
-            vision = 7,
-            type = objects.UnitType.infantry
-        )
+        super().__init__()
+        self.name = "Champions"
+        self.attack = 300
+        self.defense = 300
 
 class Berserkers(objects.Unit):
     def __init__(self):
@@ -77,12 +59,9 @@ class Berserkers(objects.Unit):
             range = 1,
             movement = 7,
             vision = 9,
-            type = objects.UnitType.infantry
+            type = objects.UnitType.infantry,
+            abilities = ["berserker"]
         )
-
-    #berserker ability
-    def percent(self):
-        return 1
 
 class EliteBerserkers(Berserkers):
     def __init__(self):
@@ -119,12 +98,9 @@ class Samurai(objects.Unit):
             range = 1,
             movement = 9,
             vision = 9,
-            type = objects.UnitType.infantry
+            type = objects.UnitType.infantry,
+            abilities = ["veteran"]
         )
-
-    #veteran ability
-    def ribbons(self):
-        return ((self.battles // 2) * 0.15) if self.battles < 6 else 0.45
 
 class EliteSamurai(Samurai):
     def __init__(self):
@@ -132,31 +108,6 @@ class EliteSamurai(Samurai):
         self.name = "Elite Samurai"
         self.attack = 300
         self.defense = 300
-
-class Pikemen(objects.Unit):
-    def __init__(self):
-        super().__init__(
-            attack = 150,
-            defense = 200,
-            range = 1,
-            movement = 7,
-            vision = 7,
-            type = objects.UnitType.infantry,
-            abilities = ["anti-cavalry"]
-        )
-
-    def offensive_abilities(self, ctx, other):
-        return 0.83 if other.type == objects.UnitType.cavalry else 0
-
-    def defensive_abilities(self, ctx, other):
-        return 0.83 if other.type == objects.UnitType.cavalry else 0
-
-class ElitePikemen(Pikemen):
-    def __init__(self):
-        super().__init__()
-        self.name = "Elite Pikemen"
-        self.attack = 200
-        self.defense = 250
 
 class Spearmen(objects.Unit):
     def __init__(self):
@@ -170,11 +121,19 @@ class Spearmen(objects.Unit):
             abilities = ["anti-cavalry"]
         )
 
-    def offensive_abilities(self, ctx, other):
-        return 0.83 if other.type == objects.UnitType.cavalry else 0
+class Pikemen(Spearmen):
+    def __init__(self):
+        super().__init__()
+        self.name = "Pikemen"
+        self.attack = 150
+        self.defense = 200
 
-    def defensive_abilities(self, ctx, other):
-        return 0.83 if other.type == objects.UnitType.cavalry else 0
+class ElitePikemen(Pikemen):
+    def __init__(self):
+        super().__init__()
+        self.name = "Elite Pikemen"
+        self.attack = 200
+        self.defense = 250
 
 class Axemen(objects.Unit):
     def __init__(self):
@@ -185,14 +144,9 @@ class Axemen(objects.Unit):
             range = 1,
             movement = 7,
             vision = 9,
-            type = objects.UnitType.infantry
+            type = objects.UnitType.infantry,
+            abilities = ["woodsmen"]
         )
-
-    def offensive_abilities(self, ctx, other):
-        return 0.33 if ctx.def_terrain.type == objects.TerrainType.forest else 0
-
-    def defensive_abilities(self, ctx, other):
-        return 0.33 if ctx.atk_terrain.type == objects.TerrainType.forest else 0
 
 class EliteAxemen(Axemen):
     def __init__(self):

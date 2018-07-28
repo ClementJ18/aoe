@@ -8,11 +8,9 @@ class Longbowmen(objects.Unit):
             range = 3,
             movement = 7,
             vision = 7,
-            type = objects.UnitType.ranged
+            type = objects.UnitType.ranged,
+            abilities = ["volley"]
         )
-
-    def offensive_abilities(self, ctx, other):
-        return 0.33 if self.health >= 50 else 0
 
 class EliteLongbowmen(Longbowmen):
     def __init__(self):
@@ -159,6 +157,6 @@ class Janissaries(objects.Unit):
 class EliteJanissaries(Janissaries):
     def __init__(self):
         super().__init__()
-        self.name = "Elite  Janissaries"
+        self.name = "Elite Janissaries"
         self.attack = 300
         self.defense = 225
