@@ -127,11 +127,11 @@ class Unit:
 class Terrain:
     def __init__(self, **kwargs):
         self.name = kwargs["name"] if "name" in kwargs else self.__class__.__name__
-        self.mov_cost = kwargs["movement_cost"]
-        self.vis_cost = kwargs["vision_cost"]
-        self.def_bonus = kwargs["defense_bonus"] if "defense_bonus" in kwargs else 0
-        self.rng_bonus = kwargs["range_bonus"] if "range_bonus" in kwargs else 0
-        self.vis_bonus = kwargs["vision_bonus"] if "vision_bonus" in kwargs else 0
+        self.mov_cost = kwargs["mov_cost"]
+        self.vis_cost = kwargs["vis_cost"]
+        self.def_bonus = kwargs["def_bonus"] if "defense_bonus" in kwargs else 0
+        self.rng_bonus = kwargs["rng_bonus"] if "range_bonus" in kwargs else 0
+        self.vis_bonus = kwargs["vis_bonus"] if "vision_bonus" in kwargs else 0
         self.type = kwargs["type"]
         self.sub_type = kwargs["sub_type"] if "sub_type" in kwargs else TerrainSubType.normal
         self.structure = kwargs["structure"] if "structure" in kwargs else False

@@ -50,7 +50,7 @@ class AbilityPicker(QMainWindow):
             check.stateChanged.connect(lambda state: self.parent.unit.abilities.append(ability) if state == Qt.Checked else self.parent.unit.abilities.remove(ability))
             check.setChecked(ability in self.parent.unit.abilities)
             check.resize(check.sizeHint())
-            if horizontal == 400:
+            if horizontal == 500:
                 horizontal = 0
                 vertical += 200
 
@@ -99,6 +99,12 @@ class AbilityCreator(QMainWindow):
 
     def add_ability(self):
         self.parent.parent().parent().custom_abilities[self.name.text()] = f"{self.modifier_true.text()} if {self.func.text()} else {self.modifier_false.text()}"
+        self.parent.parent().parent().left.ability_picker.initUI()
+        self.parent.parent().parent().right.ability_picker.initUI()
+        self.name.setText("Ability Name")
+        self.modifier_true.setText("0")
+        self.modifier_false.setText("0")
+        self.func.setText("True")
         self.close()  
 
 class SideFrame(QFrame):
@@ -187,6 +193,12 @@ class SideFrame(QFrame):
         self.c_save.move(1250, 100) 
         self.c_save.clicked.connect(self.save_unit)
 
+        self.unit_deleter = QPushButton("Delete Unit", self)
+        self.unit_deleter.resize(self.unit_deleter.sizeHint())
+        self.unit_deleter.move(1250, 150)
+        self.unit_deleter.hide()
+        self.unit_deleter.clicked.connect(self.remove_unit)
+
         self.abilities_btn = QPushButton("Ability Picker", self)
         self.abilities_btn.resize(self.abilities_btn.sizeHint())
         self.abilities_btn.move(1350, 350)
@@ -260,7 +272,13 @@ class SideFrame(QFrame):
         self.c_tsave = QPushButton("Save Terrain", self)
         self.c_tsave.resize(self.c_save.sizeHint())
         self.c_tsave.move(1250, 500) 
-        self.c_tsave.clicked.connect(self.save_terrain)   
+        self.c_tsave.clicked.connect(self.save_terrain)
+
+        self.terrain_deleter = QPushButton("Delete Terrain", self)
+        self.terrain_deleter.resize(self.terrain_deleter.sizeHint())
+        self.terrain_deleter.move(1250, 550)
+        self.terrain_deleter.hide()
+        self.terrain_deleter.clicked.connect(self.remove_terrain)   
 
     def terrain_set(self):
         self.tdefense.setText(str(self.terrain.def_bonus * 100))
@@ -276,11 +294,13 @@ class SideFrame(QFrame):
         if text in dir(units):
             c = getattr(units, text)
             self.unit = c()
+            self.unit_deleter.hide()
         elif text in self.parent.custom_units:
             u_dict = self.parent.custom_units[text].copy()
             u_dict["type"] = objects.UnitType[u_dict["type"]]  
             self.unit = objects.Unit(**u_dict)
             self.unit.__class__.__name__ = self.unit.name
+            self.unit_deleter.show()
 
         self.unit_set()
 
@@ -288,12 +308,14 @@ class SideFrame(QFrame):
         if text in dir(terrains):
             c = getattr(terrains, text)
             self.terrain = c()
+            self.terrain_deleter.hide()
         elif text in self.parent.custom_terrains:
             u_dict = self.parent.custom_terrains[text].copy()
             u_dict["type"] = objects.TerrainType[u_dict["type"]]
             u_dict["sub_type"] = objects.TerrainSubType[u_dict["sub_type"]]  
             self.terrain = objects.Terrain(**u_dict)
             self.terrain.__class__.__name__ = self.terrain.name
+            self.terrain_deleter.show()
 
         self.terrain_set()
 
@@ -308,6 +330,23 @@ class SideFrame(QFrame):
         self.UnitComboBox.setCurrentIndex(self.parent.unit_list.index(name))
 
         self.other.UnitComboBox.addItem(name)
+        self.unit_deleter.show()
+
+    def remove_unit(self):
+        name = self.unit.name
+
+        self.UnitComboBox.setCurrentIndex(0)
+        self.UnitComboBox.removeItem(self.parent.unit_list.index(name))
+
+        if self.other.unit.name == name:
+            self.other.UnitComboBox.setCurrentIndex(0)
+            self.other.UnitComboBox.removeItem(self.parent.unit_list.index(name))
+            self.other.unit_selected("Arbalests")
+
+        del self.parent.custom_units[name]
+        self.parent.unit_list.remove(name)
+
+        self.unit_selected("Arbalests")
 
     def save_terrain(self):
         name = self.terrain.name
@@ -321,6 +360,23 @@ class SideFrame(QFrame):
         self.TerrainComboBox.setCurrentIndex(self.parent.terrain_list.index(name))
 
         self.other.TerrainComboBox.addItem(name)
+        self.terrain_deleter.show()
+
+    def remove_terrain(self):
+        name = self.terrain.name
+
+        self.TerrainComboBox.setCurrentIndex(0)
+        self.TerrainComboBox.removeItem(self.parent.terrain_list.index(name))
+
+        if self.other.terrain.name == name:
+            self.other.TerrainComboBox.setCurrentIndex(0)
+            self.other.TerrainComboBox.removeItem(self.parent.terrain_list.index(name))
+            self.other.terrain_selected("Bridge")
+
+        del self.parent.custom_terrains[name]
+        self.parent.terrain_list.remove(name)
+
+        self.terrain_selected("Bridge")
 
 class GUI(QWidget):
     def __init__(self):

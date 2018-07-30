@@ -1,1 +1,1 @@
-{"BridgeOfDeath": {"name": "BridgeOfDeath", "mov_cost": 2, "vis_cost": 2, "def_bonus": 8.0, "rng_bonus": 0, "vis_bonus": 0, "type": "bridge", "sub_type": "normal", "structure": false}}
+{"Fordazda": {"name": "Fordazda", "mov_cost": 234, "vis_cost": 2, "def_bonus": 0, "rng_bonus": 0, "vis_bonus": 0, "type": "ford", "sub_type": "normal", "structure": false}}
