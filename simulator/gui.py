@@ -25,44 +25,90 @@ class AbilityPicker(QMainWindow):
     def __init__(self, parent=None):
         super(AbilityPicker, self).__init__(parent)
         self.parent = parent
+        self.gui = parent.parent
+        self.widgets = []
         self.initUI()
 
     def initUI(self):
         horizontal = 50
         vertical = 50
+        ability_list = [ability for ability in abilities.ability_dict] + [ability for ability in self.gui.custom_abilities]
 
-        for ability in abilities.ability_dict:
+        for ability in ability_list:
             check = QCheckBox(ability, self)
-            check.move(vertical, horizontal)
+            check.move(horizontal, vertical)
             check.stateChanged.connect(lambda state: self.parent.unit.abilities.append(ability) if state == Qt.Checked else self.parent.unit.abilities.remove(ability))
             check.setChecked(ability in self.parent.unit.abilities)
             check.resize(check.sizeHint())
-            if horizontal == 500:
-                horizontal = 0
-                vertical += 200
+            self.widgets.append(check)
 
-            horizontal += 50
+            if ability in self.gui.custom_abilities:
+                del_button = QPushButton("X", self)
+                del_button.move(horizontal + 200, vertical)
+                del_button.resize(25, 25)
+                del_button.clicked.connect(lambda: self.remove_ability(ability))
+                self.widgets.append(del_button)
 
-        custom_abilities = self.parent.parent.custom_abilities
-        for ability in custom_abilities:
-            check = QCheckBox(ability, self)
-            check.move(vertical, horizontal)
-            check.stateChanged.connect(lambda state: self.parent.unit.abilities.append(ability) if state == Qt.Checked else self.parent.unit.abilities.remove(ability))
-            check.setChecked(ability in self.parent.unit.abilities)
-            check.resize(check.sizeHint())
-            if horizontal == 500:
-                horizontal = 0
-                vertical += 200
+            if vertical == 500:
+                vertical = 0
+                horizontal += 250
 
-            horizontal += 50
+            vertical += 50
 
         self.setWindowTitle("Ability Picker")
         self.setWindowModality(Qt.ApplicationModal)
+
+    def remove_ability(self, ability):
+        units = self.get_units_with_ability(ability)
+        widget_i = self.widgets.index(next((x for x in self.widgets if x.text() == ability), 0))
+        reset = self.widgets[widget_i:]
+
+        if len(units) == 0:
+            del self.gui.custom_abilities[ability]
+        else:
+            msg = f"The following units have that ability: {', '.join(units)}\n Do you still wish to continue? (Continuing will remove the ability from the units)"
+            reply = QMessageBox.question(self, 'Critical',
+            msg, QMessageBox.Yes | 
+            QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.Yes:
+                for unit in units:
+                    if unit in self.gui.custom_units:
+                        self.gui.custom_units[unit]["abilities"].remove(ability)
+                    else:
+                        self.parent.unit.abilities.remove(ability)
+
+                del self.gui.custom_abilities[ability]
+            else:
+                return
+
+        reset.pop(0).setParent(None)
+        reset.pop(0).setParent(None)
+        for widget in reset:
+            if widget.y() == 50:
+                widget.move(widget.x() - 250, 400)
+
+            widget.move(widget.x(), widget.y() - 50)
+
+    def get_units_with_ability(self, ability):
+        units_list = []
+
+        for unit in self.gui.unit_list:
+            if unit in self.gui.custom_units:
+                inst = self.gui.custom_units[unit]
+                if ability in inst["abilities"]:
+                    units_list.append(inst["name"])
+            elif unit == self.parent.unit.__class__.__name__:
+                if ability in self.parent.unit.abilities:
+                    units_list.append(self.parent.unit.name)
+
+        return units_list
 
 class AbilityCreator(QMainWindow):
     def __init__(self, parent=None):
         super(AbilityCreator, self).__init__(parent)
         self.parent = parent
+        self.gui = parent.parent().parent()
         self.initUI()
 
     def initUI(self):
@@ -70,42 +116,43 @@ class AbilityCreator(QMainWindow):
         self.name = QLineEdit(self)
         self.name.move(150, 50)
         self.name.resize(200, 40)
-        self.name.setText("Ability Name")
 
         QLabel("Modifiers", self).move(50, 220)
         QLabel("If True", self).move(50, 250)
         self.modifier_true = QLineEdit(self)
         self.modifier_true.move(150, 250)
-        self.modifier_true.setText("0")
 
         QLabel("If False", self).move(50, 280)
         self.modifier_false = QLineEdit(self)
         self.modifier_false.move(150, 280)
-        self.modifier_false.setText("0")
 
         QLabel("Condition", self).move(50, 120)
         self.func = QLineEdit(self)
         self.func.move(50, 150)
         self.func.resize(600 , 30)
-        self.func.setText("True")
 
         self.abilities_btn = QPushButton("Add Ability", self)
         self.abilities_btn.resize(self.abilities_btn.sizeHint())
         self.abilities_btn.move(50, 400)
         self.abilities_btn.clicked.connect(self.add_ability)
 
+        self.set_default()
+
         self.setWindowTitle("Ability Creator")
         self.setWindowModality(Qt.ApplicationModal)
 
     def add_ability(self):
         self.parent.parent().parent().custom_abilities[self.name.text()] = f"{self.modifier_true.text()} if {self.func.text()} else {self.modifier_false.text()}"
-        self.parent.parent().parent().left.ability_picker.initUI()
-        self.parent.parent().parent().right.ability_picker.initUI()
+        # self.gui.left.ability_picker.initUI()
+        # self.gui.right.ability_picker.initUI()
+        self.set_default()
+        self.close() 
+
+    def set_default(self):
         self.name.setText("Ability Name")
         self.modifier_true.setText("0")
         self.modifier_false.setText("0")
         self.func.setText("True")
-        self.close()  
 
 class SideFrame(QFrame):
     def __init__(self, parent, **args):
@@ -115,8 +162,6 @@ class SideFrame(QFrame):
         self.terrain = terrains.Bridge()
         self.parent = parent
         self.name = args["name"]
-        self.ability_picker = AbilityPicker(self)
-        self.ability_picker.resize(800, 600)
 
         self.unit_construct()
         self.unit_set()
@@ -126,12 +171,9 @@ class SideFrame(QFrame):
 
     def unit_construct(self):
         self.UnitComboBox = QComboBox(self)
-        unit = QLabel(self.name, self)
+        QLabel(self.name, self).move(300, 35)
         self.UnitComboBox.addItems(self.parent.unit_list)
-
         self.UnitComboBox.activated[str].connect(self.unit_selected)
-
-        unit.move(300, 35)
         self.UnitComboBox.move(395, 35)
 
         QLabel("Health", self).move(25, 100)
@@ -202,7 +244,7 @@ class SideFrame(QFrame):
         self.abilities_btn = QPushButton("Ability Picker", self)
         self.abilities_btn.resize(self.abilities_btn.sizeHint())
         self.abilities_btn.move(1350, 350)
-        self.abilities_btn.clicked.connect(lambda: self.ability_picker.show())     
+        self.abilities_btn.clicked.connect(self.init_picker)  
 
     def unit_set(self):
         self.health.setText(str(self.unit.health))
@@ -216,16 +258,22 @@ class SideFrame(QFrame):
         self.atk_upgrade.setChecked(self.unit.atk_upgrade)
         self.def_upgrade.setChecked(self.unit.def_upgrade)
         self.c_name.setText(self.unit.name)
-        self.ability_picker.initUI()
+        # self.ability_picker.initUI()
+        if self.unit.name in self.parent.custom_units:
+            self.unit_deleter.show()
+        else:
+            self.unit_deleter.hide()
+
+    def init_picker(self):
+        ability_picker = AbilityPicker(self)
+        ability_picker.resize(800, 600)
+        ability_picker.show()
 
     def terrain_construct(self):
         self.TerrainComboBox = QComboBox(self)
-        terrain = QLabel("Terrain", self)
+        QLabel("Terrain", self).move(300, 435)
         self.TerrainComboBox.addItems(self.parent.terrain_list)
-        
         self.TerrainComboBox.activated[str].connect(self.terrain_selected)
-
-        terrain.move(300, 435)
         self.TerrainComboBox.move(400, 435)
 
         QLabel("Defense+", self).move(25, 500)
@@ -289,6 +337,11 @@ class SideFrame(QFrame):
         self.ttype.setCurrentIndex(self.parent.ttypes.index(self.terrain.type.name))
         self.tsubtype.setChecked(self.terrain.sub_type == objects.TerrainSubType.road)
         self.c_tname.setText(self.terrain.name)
+
+        if self.unit.name in self.parent.custom_terrains:
+            self.terrain_deleter.show()
+        else:
+            self.terrain_deleter.hide()
         
     def unit_selected(self, text):
         if text in dir(units):
@@ -437,22 +490,13 @@ class GUI(QWidget):
 
         splitter2.setSizes([400, 400])
 
-        # self.menu_bar = QMenuBar()
-        # hbox.addWidget(self.menu_bar)
-
-
         self.init_bottom()
-        # self.init_menu()
 
         self.setGeometry(300, 300, 900, 900)
         self.setWindowTitle('AoE: Age of Kings Battle Simulator')
         self.showMaximized()
 
         self.show()
-
-    # def init_menu(self):
-    #     self.file_menu = self.menu_bar.addMenu("File")
-    #     self.edit_menu = self.menu_bar.addMenu("Edit")
 
     def init_bottom(self):
         self.fight_btn = QPushButton("Fight", self.bottom)
@@ -580,10 +624,10 @@ class GUI(QWidget):
             if "rapid fire" in ctx.attacker.abilities:
                 ctx.attacker.fight(ctx, ctx.defender)
 
-        if "zeal" in ctx.attacker.abilities:
+        if "zeal" in ctx.attacker.abilities and ctx.attacker.health > 0:
             ctx.attacker.health += 20 if ctx.attacker.health + 20 <= 100 else 100 - ctx.attacker.health
 
-        if "zeal" in ctx.defender.abilities:
+        if "zeal" in ctx.defender.abilities and ctx.defender.health > 0:
             ctx.defender.health += 20 if ctx.defender.health + 20 <= 100 else 100 - ctx.defender.health
 
     def initiate(self):
@@ -616,26 +660,19 @@ class GUI(QWidget):
         self.right.unit_set()
 
     def inverse_units(self):
-        temp = self.left.unit
-        temp2 = self.right.unit
-        self.right.UnitComboBox.setCurrentIndex(self.unit_list.index(temp.__class__.__name__))
-        self.left.UnitComboBox.setCurrentIndex(self.unit_list.index(temp2.__class__.__name__))
+        self.right.UnitComboBox.setCurrentIndex(self.unit_list.index(self.left.unit.__class__.__name__))
+        self.left.UnitComboBox.setCurrentIndex(self.unit_list.index(self.right.unit.__class__.__name__))
 
-        self.left.unit = temp2
-        self.right.unit = temp
+        self.left.unit, self.right.unit = self.right.unit, self.left.unit
 
         self.left.unit_set()
         self.right.unit_set()
 
     def inverse_terrain(self):
-        temp = self.left.terrain
-        temp2 = self.right.terrain
-
-        self.right.TerrainComboBox.setCurrentIndex(self.terrain_list.index(temp.name))
-        self.left.TerrainComboBox.setCurrentIndex(self.terrain_list.index(temp2.name))
+        self.right.TerrainComboBox.setCurrentIndex(self.terrain_list.index(self.left.terrain.name))
+        self.left.TerrainComboBox.setCurrentIndex(self.terrain_list.index(self.right.terrain.name))
         
-        self.left.terrain = temp2
-        self.right.terrain = temp
+        self.left.terrain, self.right.terrain = self.right.terrain, self.left.terrain
 
         self.left.terrain_set()
         self.right.terrain_set()

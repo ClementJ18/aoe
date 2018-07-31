@@ -5,18 +5,18 @@ import sys
 
 class Unit:
     def __init__(self, **kwargs):
-        self.name = kwargs["name"] if "name" in kwargs else self.__class__.__name__
-        self.health = kwargs["health"] if "health" in kwargs else 100
-        self.movement = kwargs["movement"]
-        self.attack = kwargs["attack"]
-        self.defense = kwargs["defense"]
-        self.vision = kwargs["vision"]
-        self.type = kwargs["type"]
-        self.range = kwargs["range"]
-        self.battles = kwargs["battles"] if "battles" in kwargs else 0
-        self.abilities = kwargs["abilities"] if "abilities" in kwargs else []
-        self.def_upgrade = kwargs["def_upgrade"] if "def_upgrade" in kwargs else False
-        self.atk_upgrade = kwargs["atk_upgrade"] if "atk_upgrade" in kwargs else False
+        self.name = kwargs.get("name", self.__class__.__name__)
+        self.health = kwargs.get("health", 100)
+        self.movement = kwargs.get("movement")
+        self.attack = kwargs.get("attack")
+        self.defense = kwargs.get("defense")
+        self.vision = kwargs.get("vision")
+        self.type = kwargs.get("type")
+        self.range = kwargs.get("range")
+        self.battles = kwargs.get("battles", 0)
+        self.abilities = kwargs.get("abilities", [])
+        self.def_upgrade = kwargs.get("def_upgrade", False)
+        self.atk_upgrade = kwargs.get("atk_upgrade", False)
 
     def __str__(self):
         return f"<{self.name} health={self.health} battles={self.battles}>"
@@ -79,7 +79,7 @@ class Unit:
         if "only units" in self.abilities and other.type == UnitType.structure:
             return
 
-        if (ctx.distance == 1 and ctx.status == 0) or (ctx.distance > 1 and ctx.status == 0):
+        if ctx.status == 0:
             terrain_bonus = ctx.def_terrain.def_bonus
         elif ctx.distance > 1 and ctx.status == 1:
             terrain_bonus = ctx.atk_terrain.def_bonus
@@ -126,15 +126,15 @@ class Unit:
 
 class Terrain:
     def __init__(self, **kwargs):
-        self.name = kwargs["name"] if "name" in kwargs else self.__class__.__name__
-        self.mov_cost = kwargs["mov_cost"]
-        self.vis_cost = kwargs["vis_cost"]
-        self.def_bonus = kwargs["def_bonus"] if "defense_bonus" in kwargs else 0
-        self.rng_bonus = kwargs["rng_bonus"] if "range_bonus" in kwargs else 0
-        self.vis_bonus = kwargs["vis_bonus"] if "vision_bonus" in kwargs else 0
-        self.type = kwargs["type"]
-        self.sub_type = kwargs["sub_type"] if "sub_type" in kwargs else TerrainSubType.normal
-        self.structure = kwargs["structure"] if "structure" in kwargs else False
+        self.name = kwargs.get("name", self.__class__.__name__)
+        self.mov_cost = kwargs.get("mov_cost")
+        self.vis_cost = kwargs.get("vis_cost")
+        self.def_bonus = kwargs.get("def_bonus", 0)
+        self.rng_bonus = kwargs.get("rng_bonus", 0)
+        self.vis_bonus = kwargs.get("vis_bonus", 0)
+        self.type = kwargs.get("type")
+        self.sub_type = kwargs.get("sub_type", TerrainSubType.normal)
+        self.structure = kwargs.get("structure", False)
 
     def __str__(self):
         return f"{self.type}({self.sub_type})"
@@ -166,14 +166,14 @@ class TerrainSubType(enum.Enum):
 
 class Context:
     def __init__(self, **kwargs):
-        self.attacker = kwargs["attacker"]
-        self.defender = kwargs["defender"]
-        self.atk_terrain = kwargs["atk_terrain"]
-        self.def_terrain = kwargs["def_terrain"]
+        self.attacker = kwargs.get("attacker")
+        self.defender = kwargs.get("defender")
+        self.atk_terrain = kwargs.get("atk_terrain")
+        self.def_terrain = kwargs.get("def_terrain")
         self.status = 0 #0 attack 1 counter attack
-        self.distance = kwargs["distance"]
-        self.debug = kwargs["debug"]
-        self.custom_abilities = kwargs["custom_abilities"]
+        self.distance = kwargs.get("distance")
+        self.debug = kwargs.get("debug")
+        self.custom_abilities = kwargs.get("custom_abilities")
 
 
 bonus_dict = {

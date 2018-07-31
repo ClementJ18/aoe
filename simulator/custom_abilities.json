@@ -1,1 +1,1 @@
-{"saboteur": "0.33 if other.type == objects.UnitType.siege else 0", "Ability Name": "0 if True else 0", "Ability Name2": "0 if True else 0", "Ability Name8": "0 if True else 0", "Ability Name3": "0 if True else 0", "Ability Name4": "0 if True else 0", "Ability Name6": "0 if True else 0", "Ability Name12": "0 if True else 0"}
+{"saboteur": "0.33 if other.type == objects.UnitType.siege else 0"}
