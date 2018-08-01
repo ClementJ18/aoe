@@ -21,6 +21,11 @@ class Unit:
     def __str__(self):
         return f"<{self.name} health={self.health} battles={self.battles}>"
 
+    def __eq__(self, other):
+        if isinstance(other, Unit):
+            return self.__dict__ == other.__dict__
+        return False
+
     def set(self, attr, value):
         self.__setattr__(attr, value)
 
@@ -46,13 +51,44 @@ class Unit:
 
     def process_abilities(self, ctx, other):
         env = {
-            "other": other,
+            "enemy": other,
             "ctx": ctx,
             "self": self,
             "objects": sys.modules["objects"],
-            "UnitType": UnitType,
-            "TerrainType": TerrainType,
-            "TerrainSubType": TerrainSubType
+            "attack": ctx.status == 0,
+            "counterattack": ctx.status == 1,
+            "is_defender": ctx.defender == self,
+            "is_attacker": ctx.attacker == self,
+            "attacker_terrain": ctx.atk_terrain,
+            "defender_terrain": ctx.def_terrain,
+            "self_terrain": ctx.atk_terrain if ctx.attacker == self else ctx.def_terrain,
+            "enemy_terrain": ctx.atk_terrain if ctx.attacker == other else ctx.def_terrain,
+            "attacking": (ctx.attacker == self and ctx.status == 0) or (ctx.defender == self and ctx.status == 1),
+            "defending": (ctx.attacker == self and ctx.status == 1) or (ctx.defender == self and ctx.status == 0),
+        }
+
+        env += {
+            "infantry": UnitType.infantry,  
+            "ranged": UnitType.ranged,    
+            "cavalry": UnitType.cavalry,   
+            "siege": UnitType.siege,     
+            "structure": UnitType.structure 
+        }
+
+        env += {
+            "plain": TerrainType.plain,
+            "desert": TerrainType.desert,
+            "hill": TerrainType.hill,
+            "mountain": TerrainType.mountain,
+            "forest": TerrainType.forest,
+            "swamp": TerrainType.swamp,
+            "bridge": TerrainType.bridge,
+            "ford": TerrainType.ford
+        }
+
+        env += {
+            "road": TerrainSubType.road,
+            "normal": TerrainSubType.normal
         }
 
         abilities_modif = 0
@@ -152,13 +188,12 @@ class UnitType(enum.Enum):
 class TerrainType(enum.Enum):
     plain     = 0
     desert    = 1
-    structure = 2
-    hill      = 3
-    mountain  = 4
-    forest    = 5
-    swamp     = 6
-    bridge    = 7
-    ford      = 8
+    hill      = 2
+    mountain  = 3
+    forest    = 4
+    swamp     = 5
+    bridge    = 6
+    ford      = 7
 
 class TerrainSubType(enum.Enum):
     normal = 0

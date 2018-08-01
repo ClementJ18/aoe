@@ -109,6 +109,37 @@ class AbilityCreator(QMainWindow):
         super(AbilityCreator, self).__init__(parent)
         self.parent = parent
         self.gui = parent.parent().parent()
+        self.env = {
+            "enemy": "Medium level. This represents the enemy object, this is useful for advanced users that wish to user different attributes.",
+            "ctx": "Low level. This is the context object, it contains everything the code uses to process battles.",
+            "self": "Medium level. This is the unit object that the ability is attached to, same as with enemy",
+            "objects": "Low level. This represents the module itself and can be used to reach the base classes and compare certain attributes",
+            "attack": "High level. Can be used to check if the current phase of the battle is the inital attack",
+            "counterattack": "High level. Can be used to check if the current phase of the battle is the counter attack made by the defender",
+            "attacking": "High level. This can be used to check if the unit is currently attacking.",
+            "defending": "High level. This can be used to check if the unit is currently defending. ",
+            "is_defender": "High level. Can be used to check if the unit is the defending unit (unit on the right).",
+            "is_attacker": "High level. Can be used to check if the unit is the attacking unit (unit on the left).",
+            "attacker_terrain": "Medium level. Can be used to access attributes of the terrain the attacker is standing on.",
+            "defender_terrain": "Medium level. Can be used to access attributes of the terrain the defender is standing on.",
+            "self_terrain": "Medium level. This represents the terrain the unit for which abilities are currently being checked is standing on.",
+            "enemy_terrain": "Medium level. This represents the terrain the enemy of the unit for which abilities are currently being checked is standing on.",
+            "infantry": "High level. A unit type, can be compared to unit objects' type attribute, represents infantry units.",  
+            "ranged": "High level. A unit type, can be compared to unit objects' type attribute, represents ranged units.",    
+            "cavalry": "High level. A unit type, can be compared to unit objects' type attribute, represents cavalry units.",   
+            "siege": "High level. A unit type, can be compared to unit objects' type attribute, represents siege units.",     
+            "structure": "High level. A unit type, can be compared to unit objects' type attribute, represents structures.",
+            "plain": "High level. A terrain type, can be compared to terrain objects' type attribute, represents plains",
+            "desert": "High level. A terrain type, can be compared to terrain objects' type attribute, represents desert",
+            "hill": "High level. A terrain type, can be compared to terrain objects' type attribute, represents hills",
+            "mountain": "High level. A terrain type, can be compared to terrain objects' type attribute, represents mountains",
+            "forest": "High level. A terrain type, can be compared to terrain objects' type attribute, represents forests",
+            "swamp": "High level. A terrain type, can be compared to terrain objects' type attribute, represents swamps",
+            "bridge": "High level. A terrain type, can be compared to terrain objects' type attribute, represents bridges",
+            "ford": "High level. A terrain type, can be compared to terrain objects' type attribute, represents fords",
+            "road": "High level. A terrain sub type, can be compared to terrain objects' sub_type attribute, represents roads",
+            "normal": "High level. A terrain sub type, can be compared to terrain objects' sub_type attribute, represents non-road terrain"
+        }
         self.initUI()
 
     def initUI(self):
@@ -121,20 +152,39 @@ class AbilityCreator(QMainWindow):
         QLabel("If True", self).move(50, 250)
         self.modifier_true = QLineEdit(self)
         self.modifier_true.move(150, 250)
+        self.modifier_true.setToolTip("This is the modifier that will be added to the rest of the modifiers if the condition is fulfilled")
 
         QLabel("If False", self).move(50, 280)
         self.modifier_false = QLineEdit(self)
         self.modifier_false.move(150, 280)
+        self.modifier_false.setToolTip("This is the modifier that will be added to the rest of the modifiers if the condition fails")
 
         QLabel("Condition", self).move(50, 120)
+        QLabel("if", self).move(50, 150)
         self.func = QLineEdit(self)
-        self.func.move(50, 150)
+        self.func.move(75, 150)
         self.func.resize(600 , 30)
 
         self.abilities_btn = QPushButton("Add Ability", self)
         self.abilities_btn.resize(self.abilities_btn.sizeHint())
         self.abilities_btn.move(50, 400)
         self.abilities_btn.clicked.connect(self.add_ability)
+
+        self.text_box = QPlainTextEdit(self)
+        self.text_box.setReadOnly(True)
+        self.text_box.move(350, 270)
+        self.text_box.resize(400, 200)
+        self.text_box.insertPlainText(self.env["enemy"]+"\n")
+
+        def editor(text):
+            self.text_box.clear()
+            self.text_box.insertPlainText(self.env[text]+"\n")
+
+        self.tooltip_box = QComboBox(self)
+        self.tooltip_box.addItems(self.env.keys())
+        self.tooltip_box.resize(self.tooltip_box.sizeHint())
+        self.tooltip_box.move(350, 220)
+        self.tooltip_box.activated[str].connect(editor)
 
         self.set_default()
 
@@ -143,8 +193,6 @@ class AbilityCreator(QMainWindow):
 
     def add_ability(self):
         self.parent.parent().parent().custom_abilities[self.name.text()] = f"{self.modifier_true.text()} if {self.func.text()} else {self.modifier_false.text()}"
-        # self.gui.left.ability_picker.initUI()
-        # self.gui.right.ability_picker.initUI()
         self.set_default()
         self.close() 
 
@@ -258,7 +306,6 @@ class SideFrame(QFrame):
         self.atk_upgrade.setChecked(self.unit.atk_upgrade)
         self.def_upgrade.setChecked(self.unit.def_upgrade)
         self.c_name.setText(self.unit.name)
-        # self.ability_picker.initUI()
         if self.unit.name in self.parent.custom_units:
             self.unit_deleter.show()
         else:
@@ -587,9 +634,6 @@ class GUI(QWidget):
             event.ignore()
 
     def battle(self, ctx):
-        ctx.attacker.battles += 1
-        ctx.defender.battles += 1
-
         def priority_check():
             if "first strike" in ctx.attacker.abilities:
                 return False
@@ -629,6 +673,9 @@ class GUI(QWidget):
 
         if "zeal" in ctx.defender.abilities and ctx.defender.health > 0:
             ctx.defender.health += 20 if ctx.defender.health + 20 <= 100 else 100 - ctx.defender.health
+
+        ctx.attacker.battles += 1
+        ctx.defender.battles += 1
 
     def initiate(self):
         if self.left.unit.health == 0 or self.right.unit.health == 0:
