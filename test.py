@@ -1,6 +1,6 @@
-import units
-import terrains
-import objects
+import simulator.units
+import simulator.terrains
+import simulator.objects
 
 c = units.Templars()
 l = units.TwoHanded()

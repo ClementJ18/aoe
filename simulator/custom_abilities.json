@@ -1,1 +1,1 @@
-{"saboteur": "0.33 if other.type == objects.UnitType.siege else 0", "payback": "0.5 if counterattack and is_defender else 0"}
+{"Ability Name1": "0 if True else 0", "Ability Name2": "0 if True else 0"}

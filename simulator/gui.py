@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QFrame,
     QComboBox, QLineEdit, QPushButton, QCheckBox, QSlider, QLCDNumber,
     QPlainTextEdit, QMenuBar, QMainWindow)
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 
 import sys
 import _io
@@ -57,6 +58,7 @@ class AbilityPicker(QMainWindow):
 
         self.setWindowTitle("Ability Picker")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowIcon(QIcon("icon.png"))
 
     def remove_ability(self, ability):
         units = self.get_units_with_ability(ability)
@@ -101,6 +103,9 @@ class AbilityPicker(QMainWindow):
             elif unit == self.parent.unit.__class__.__name__:
                 if ability in self.parent.unit.abilities:
                     units_list.append(self.parent.unit.name)
+            elif unit == self.parent.other.__class__.__name__:
+                if ability in self.parent.other.unit.abilities:
+                    units_list.append(self.parent.other .unit.name)
 
         return units_list
 
@@ -110,37 +115,48 @@ class AbilityCreator(QMainWindow):
         self.parent = parent
         self.gui = parent.parent().parent()
         self.env = {
-            "enemy": "Medium level. This represents the enemy object, this is useful for advanced users that wish to user different attributes.",
-            "ctx": "Low level. This is the context object, it contains everything the code uses to process battles.",
-            "self": "Medium level. This is the unit object that the ability is attached to, same as with enemy",
-            "objects": "Low level. This represents the module itself and can be used to reach the base classes and compare certain attributes",
-            "attack": "High level. Can be used to check if the current phase of the battle is the inital attack",
-            "counterattack": "High level. Can be used to check if the current phase of the battle is the counter attack made by the defender",
-            "attacking": "High level. This can be used to check if the unit is currently attacking.",
-            "defending": "High level. This can be used to check if the unit is currently defending. ",
-            "is_defender": "High level. Can be used to check if the unit is the defending unit (unit on the right).",
-            "is_attacker": "High level. Can be used to check if the unit is the attacking unit (unit on the left).",
-            "attacker_terrain": "Medium level. Can be used to access attributes of the terrain the attacker is standing on.",
-            "defender_terrain": "Medium level. Can be used to access attributes of the terrain the defender is standing on.",
-            "self_terrain": "Medium level. This represents the terrain the unit for which abilities are currently being checked is standing on.",
-            "enemy_terrain": "Medium level. This represents the terrain the enemy of the unit for which abilities are currently being checked is standing on.",
-            "infantry": "High level. A unit type, can be compared to unit objects' type attribute, represents infantry units.",  
-            "ranged": "High level. A unit type, can be compared to unit objects' type attribute, represents ranged units.",    
-            "cavalry": "High level. A unit type, can be compared to unit objects' type attribute, represents cavalry units.",   
-            "siege": "High level. A unit type, can be compared to unit objects' type attribute, represents siege units.",     
-            "structure": "High level. A unit type, can be compared to unit objects' type attribute, represents structures.",
-            "plain": "High level. A terrain type, can be compared to terrain objects' type attribute, represents plains",
-            "desert": "High level. A terrain type, can be compared to terrain objects' type attribute, represents desert",
-            "hill": "High level. A terrain type, can be compared to terrain objects' type attribute, represents hills",
-            "mountain": "High level. A terrain type, can be compared to terrain objects' type attribute, represents mountains",
-            "forest": "High level. A terrain type, can be compared to terrain objects' type attribute, represents forests",
-            "swamp": "High level. A terrain type, can be compared to terrain objects' type attribute, represents swamps",
-            "bridge": "High level. A terrain type, can be compared to terrain objects' type attribute, represents bridges",
-            "ford": "High level. A terrain type, can be compared to terrain objects' type attribute, represents fords",
-            "road": "High level. A terrain sub type, can be compared to terrain objects' sub_type attribute, represents roads",
-            "normal": "High level. A terrain sub type, can be compared to terrain objects' sub_type attribute, represents non-road terrain"
+            "enemy": "Medium level keyword. This represents the enemy object, this is useful for advanced users that wish to user different attributes.",
+            "ctx": "Low level keyword. This is the context object, it contains everything the code uses to process battles.",
+            "self": "Medium level keyword. This is the unit object that the ability is attached to, same as with enemy",
+            "objects": "Low level keyword. This represents the module itself and can be used to reach the base classes and compare certain attributes",
+            "attack": "High level keyword. Can be used to check if the current phase of the battle is the inital attack",
+            "counterattack": "High level keyword. Can be used to check if the current phase of the battle is the counter attack made by the defender",
+            "attacking": "High level keyword. This can be used to check if the unit is currently attacking.",
+            "defending": "High level keyword. This can be used to check if the unit is currently defending. ",
+            "is_defender": "High level keyword. Can be used to check if the unit is the defending unit (unit on the right).",
+            "is_attacker": "High level keyword. Can be used to check if the unit is the attacking unit (unit on the left).",
+            "attacker_terrain": "Medium level keyword. Can be used to access attributes of the terrain the attacker is standing on.",
+            "defender_terrain": "Medium level keyword. Can be used to access attributes of the terrain the defender is standing on.",
+            "self_terrain": "Medium level keyword. This represents the terrain the unit for which abilities are currently being checked is standing on.",
+            "enemy_terrain": "Medium level keyword. This represents the terrain the enemy of the unit for which abilities are currently being checked is standing on.",
+            "infantry": "High level keyword. A unit type, can be compared to unit objects' type attribute, represents infantry units.",  
+            "ranged": "High level keyword. A unit type, can be compared to unit objects' type attribute, represents ranged units.",    
+            "cavalry": "High level keyword. A unit type, can be compared to unit objects' type attribute, represents cavalry units.",   
+            "siege": "High level keyword. A unit type, can be compared to unit objects' type attribute, represents siege units.",     
+            "structure": "High level keyword. A unit type, can be compared to unit objects' type attribute, represents structures.",
+            "plain": "High level keyword. A terrain type, can be compared to terrain objects' type attribute, represents plains",
+            "desert": "High level keyword. A terrain type, can be compared to terrain objects' type attribute, represents desert",
+            "hill": "High level keyword. A terrain type, can be compared to terrain objects' type attribute, represents hills",
+            "mountain": "High level keyword. A terrain type, can be compared to terrain objects' type attribute, represents mountains",
+            "forest": "High level keyword. A terrain type, can be compared to terrain objects' type attribute, represents forests",
+            "swamp": "High level keyword. A terrain type, can be compared to terrain objects' type attribute, represents swamps",
+            "bridge": "High level keyword. A terrain type, can be compared to terrain objects' type attribute, represents bridges",
+            "ford": "High level keyword. A terrain type, can be compared to terrain objects' type attribute, represents fords",
+            "road": "High level keyword. A terrain sub type, can be compared to terrain objects' sub_type attribute, represents roads",
+            "normal": "High level keyword. A terrain sub type, can be compared to terrain objects' sub_type attribute, represents non-road terrain"
         }
+
+        self.levels = "<b>High level</b>: keyword representing a single value <br><b>Medium level</b>: keyword representing objects which have high level attributes which can be access through dot notation (medium_level.high_level)<br><b>Low level</b>: keyword representing objects with high, medium and low level attributes which can be access through dot notation."
         self.initUI()
+
+        self.box = QMessageBox()
+        self.box.setIcon(QMessageBox.Information)
+        self.box.setText("Reserved ability keywords are classified in three categories:")
+        self.box.setInformativeText(self.levels)
+        self.box.setWindowTitle("Keyword Levels")
+        self.box.setWindowIcon(QIcon("icon.png"))
+        self.box.setStandardButtons(QMessageBox.Ok)
+        self.box.buttonClicked.connect(lambda: self.box.close())
 
     def initUI(self):
         QLabel("Name", self).move(50, 50)
@@ -170,15 +186,20 @@ class AbilityCreator(QMainWindow):
         self.abilities_btn.move(50, 400)
         self.abilities_btn.clicked.connect(self.add_ability)
 
+        self.levels_btn = QPushButton("Levels?", self)
+        self.levels_btn.resize(self.levels_btn.sizeHint())
+        self.levels_btn.move(600, 210)
+        self.levels_btn.clicked.connect(lambda: self.box.show())
+
         self.text_box = QPlainTextEdit(self)
         self.text_box.setReadOnly(True)
         self.text_box.move(350, 270)
         self.text_box.resize(400, 200)
-        self.text_box.insertPlainText(self.env["enemy"]+"\n")
+        self.text_box.insertPlainText(f'{self.env["enemy"]}')
 
         def editor(text):
             self.text_box.clear()
-            self.text_box.insertPlainText(self.env[text]+"\n")
+            self.text_box.insertPlainText(f'{self.env[text]}')
 
         self.tooltip_box = QComboBox(self)
         self.tooltip_box.addItems(self.env.keys())
@@ -189,7 +210,9 @@ class AbilityCreator(QMainWindow):
         self.set_default()
 
         self.setWindowTitle("Ability Creator")
-        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowIcon(QIcon("icon.png"))
+        self.setWindowModality(Qt.ApplicationModal)        
+
 
     def add_ability(self):
         self.parent.parent().parent().custom_abilities[self.name.text()] = f"{self.modifier_true.text()} if {self.func.text()} else {self.modifier_false.text()}"
@@ -542,6 +565,7 @@ class GUI(QWidget):
         self.setGeometry(300, 300, 900, 900)
         self.setWindowTitle('AoE: Age of Kings Battle Simulator')
         self.showMaximized()
+        self.setWindowIcon(QIcon("icon.png"))
 
         self.show()
 
@@ -616,8 +640,8 @@ class GUI(QWidget):
 
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Message',
-            "Are you sure you want to quit?", QMessageBox.Yes | 
-            QMessageBox.No, QMessageBox.No)
+            "Do you wish to save the changes you made?", QMessageBox.Yes | 
+            QMessageBox.No | QMessageBox.Cancel, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
             with open("custom_units.json", "w") as f:
@@ -630,8 +654,10 @@ class GUI(QWidget):
                 json.dump(self.custom_abilities, f)
 
             event.accept()
-        else:
+        elif reply == QMessageBox.Cancel:
             event.ignore()
+        else:
+            event.accept()
 
     def battle(self, ctx):
         def priority_check():

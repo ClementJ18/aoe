@@ -24,6 +24,7 @@ class Unit:
     def __eq__(self, other):
         if isinstance(other, Unit):
             return self.__dict__ == other.__dict__
+
         return False
 
     def set(self, attr, value):
@@ -50,7 +51,7 @@ class Unit:
         return 0.25 if self.atk_upgrade else 0
 
     def process_abilities(self, ctx, other):
-        env = {
+        self.env = {
             "enemy": other,
             "ctx": ctx,
             "self": self,
@@ -65,17 +66,11 @@ class Unit:
             "enemy_terrain": ctx.atk_terrain if ctx.attacker == other else ctx.def_terrain,
             "attacking": (ctx.attacker == self and ctx.status == 0) or (ctx.defender == self and ctx.status == 1),
             "defending": (ctx.attacker == self and ctx.status == 1) or (ctx.defender == self and ctx.status == 0),
-        }
-
-        env += {
             "infantry": UnitType.infantry,  
             "ranged": UnitType.ranged,    
             "cavalry": UnitType.cavalry,   
             "siege": UnitType.siege,     
-            "structure": UnitType.structure 
-        }
-
-        env += {
+            "structure": UnitType.structure,
             "plain": TerrainType.plain,
             "desert": TerrainType.desert,
             "hill": TerrainType.hill,
@@ -83,10 +78,7 @@ class Unit:
             "forest": TerrainType.forest,
             "swamp": TerrainType.swamp,
             "bridge": TerrainType.bridge,
-            "ford": TerrainType.ford
-        }
-
-        env += {
+            "ford": TerrainType.ford,
             "road": TerrainSubType.road,
             "normal": TerrainSubType.normal
         }
@@ -96,7 +88,7 @@ class Unit:
             try:
                 abilities_modif += abilities.ability_dict[ability](self, ctx, other)
             except KeyError:
-                abilities_modif += simple_eval(ctx.custom_abilities[ability], names=env)
+                abilities_modif += simple_eval(ctx.custom_abilities[ability], names=self.env)
             except TypeError:
                 pass
 
@@ -153,12 +145,6 @@ class Unit:
             lost_h = other.health
 
         other.health -= lost_h
-
-        if self.health > 100:
-            self.health = 100
-
-        if other.health > 100:
-            other.health = 100
 
 class Terrain:
     def __init__(self, **kwargs):
