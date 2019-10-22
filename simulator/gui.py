@@ -752,5 +752,6 @@ class GUI(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setStyle('Fusion')
     gui = GUI()
     sys.exit(app.exec_())
